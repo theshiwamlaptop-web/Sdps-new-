@@ -1,0 +1,1200 @@
+package com.example.ui.screens
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
+import androidx.compose.ui.res.painterResource
+import com.example.R
+
+import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
+import com.example.data.model.*
+import com.example.ui.CalendarEvent
+import com.example.ui.SchoolViewModel
+import com.example.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+
+// CENTRAL SCHOOL ACADEMIC CLASSES (Nursery to 10th Grade)
+val SchoolClassesList = listOf(
+    "Nursery", "LKG", "UKG", 
+    "Class 1", "Class 2", "Class 3", "Class 4", "Class 5", 
+    "Class 6", "Class 7", "Class 8", "Class 9", "Class 10"
+)
+
+@Composable
+fun getTeacherAssignedClass(viewModel: SchoolViewModel): String {
+    val currentUser by viewModel.currentUser.collectAsState()
+    val teachers by viewModel.teachersState.collectAsState()
+    val roleStr = currentUser?.role?.uppercase()?.trim() ?: ""
+    if (roleStr == "TEACHER" || roleStr == "CLASS_TEACHER") {
+        val teacher = teachers.find { it.teacherId == currentUser?.userId }
+        if (teacher != null && teacher.classTeacherOf.isNotBlank()) {
+            return teacher.classTeacherOf
+        }
+        if (teacher != null) {
+            val matches = SchoolClassesList.filter { cl ->
+                teacher.classesAssigned.contains(cl, ignoreCase = true)
+            }
+            if (matches.isNotEmpty()) return matches.first()
+        }
+        return "Class 9" // Default fallback for TC12/demo
+    }
+    return ""
+}
+
+@Composable
+fun getTeacherAssignedSection(viewModel: SchoolViewModel): String {
+    val currentUser by viewModel.currentUser.collectAsState()
+    val teachers by viewModel.teachersState.collectAsState()
+    val roleStr = currentUser?.role?.uppercase()?.trim() ?: ""
+    if (roleStr == "TEACHER" || roleStr == "CLASS_TEACHER") {
+        val teacher = teachers.find { it.teacherId == currentUser?.userId }
+        return "A" // Default fallback
+    }
+    return ""
+}
+
+// ENUM FOR MODULAR SYSTEM NAVIGATION
+enum class AppScreen(val title: String) {
+    SPLASH("Loading Session..."),
+    LOGIN("Secure Login"),
+    DASHBOARD("Smart Dashboard"),
+    STUDENTS("Students Directory"),
+    TEACHERS("Teachers Staff"),
+    ATTENDANCE("Class Attendance"),
+    FEES("Fees Management"),
+    HOMEWORK("Class Homework"),
+    NOTICES("Notices Board"),
+    TIMETABLE("Weekly Schedules"),
+    CHAT("Real-Time Messenger"),
+    REPORTS("Reports & Analytics"),
+    CALENDAR("School Calendar"),
+    CLASSES("Academic Classes"),
+    SETTINGS("Settings & Profile"),
+    ADD_STUDENT("Register Student")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainSchoolAppContainer(
+    viewModel: SchoolViewModel,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val isSessionChecking by viewModel.isSessionChecking.collectAsState()
+    var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
+    val currentUser by viewModel.currentUser.collectAsState()
+    val isFirebaseMode by viewModel.isFirebaseMode.collectAsState()
+    var selectedStudentForFeeLedger by remember { mutableStateOf<Student?>(null) }
+
+    // Observe navigationState for strict reactive role-based screen routing
+    val navigationState by viewModel.navigationState.collectAsState()
+
+    // Import UI states imports or reference properly: com.example.ui.NavigationTarget
+    LaunchedEffect(navigationState) {
+        when (navigationState) {
+            com.example.ui.NavigationTarget.PRINCIPAL_DASHBOARD,
+            com.example.ui.NavigationTarget.ADMIN_DASHBOARD,
+            com.example.ui.NavigationTarget.TEACHER_DASHBOARD,
+            com.example.ui.NavigationTarget.STUDENT_DASHBOARD -> {
+                if (currentScreen == AppScreen.LOGIN || currentScreen == AppScreen.SPLASH) {
+                    currentScreen = AppScreen.DASHBOARD
+                    Toast.makeText(context, "Welcome back, ${currentUser?.name}!", Toast.LENGTH_SHORT).show()
+                }
+            }
+            com.example.ui.NavigationTarget.LOGIN_SCREEN -> {
+                currentScreen = AppScreen.LOGIN
+            }
+            com.example.ui.NavigationTarget.Idle -> {
+                // Do nothing
+            }
+        }
+    }
+
+    // Secure Role-Based Access Control Guards & Sync
+    LaunchedEffect(currentUser) {
+        val user = currentUser
+        if (user != null) {
+            val role = user.role.uppercase().trim()
+            if (role == "STUDENT") {
+                val allowedScreens = listOf(
+                    AppScreen.DASHBOARD, AppScreen.ATTENDANCE, AppScreen.FEES,
+                    AppScreen.SETTINGS, AppScreen.CHAT, AppScreen.NOTICES,
+                    AppScreen.TIMETABLE, AppScreen.HOMEWORK, AppScreen.CALENDAR
+                )
+                if (currentScreen !in allowedScreens) {
+                    currentScreen = AppScreen.DASHBOARD
+                }
+            } else if (role == "CLASS_TEACHER" || role == "TEACHER") {
+                val allowedScreens = listOf(
+                    AppScreen.DASHBOARD, AppScreen.CLASSES, AppScreen.ATTENDANCE,
+                    AppScreen.HOMEWORK, AppScreen.NOTICES, AppScreen.SETTINGS,
+                    AppScreen.CHAT, AppScreen.TIMETABLE, AppScreen.CALENDAR,
+                    AppScreen.ADD_STUDENT
+                )
+                if (currentScreen !in allowedScreens) {
+                    currentScreen = AppScreen.DASHBOARD
+                }
+            } else if (role == "PRINCIPAL" || role == "ADMIN" || role == "HEAD_ADMIN") {
+                val allowedScreens = listOf(
+                    AppScreen.DASHBOARD, AppScreen.STUDENTS, AppScreen.TEACHERS,
+                    AppScreen.ATTENDANCE, AppScreen.FEES, AppScreen.HOMEWORK,
+                    AppScreen.NOTICES, AppScreen.TIMETABLE, AppScreen.CHAT,
+                    AppScreen.REPORTS, AppScreen.CALENDAR, AppScreen.CLASSES,
+                    AppScreen.SETTINGS, AppScreen.ADD_STUDENT
+                )
+                if (currentScreen !in allowedScreens) {
+                    currentScreen = AppScreen.DASHBOARD
+                }
+            }
+        } else {
+            if (!isSessionChecking) {
+                currentScreen = AppScreen.LOGIN
+            }
+        }
+    }
+
+    // Prevent the user from going back to Login/Splash if authenticated
+    androidx.activity.compose.BackHandler(enabled = (currentUser != null)) {
+        if (currentScreen != AppScreen.DASHBOARD) {
+            currentScreen = AppScreen.DASHBOARD
+        } else {
+            (context as? android.app.Activity)?.finish()
+        }
+    }
+
+    if (isSessionChecking || currentScreen == AppScreen.SPLASH) {
+        SplashScreen()
+    } else {
+        Scaffold(
+            topBar = {
+                if (currentScreen != AppScreen.LOGIN && currentScreen != AppScreen.SPLASH) {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                        actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (currentScreen == AppScreen.DASHBOARD) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.app_logo),
+                                    contentDescription = "Logo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                            Column {
+                                Text(
+                                    text = "S. D Public School",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                )
+                                Text(
+                                    text = currentScreen.title,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                )
+                            )
+                        }
+                            }
+                    },
+                    navigationIcon = {
+                        if (currentScreen != AppScreen.DASHBOARD) {
+                            IconButton(
+                                onClick = { currentScreen = AppScreen.DASHBOARD },
+                                modifier = Modifier.testTag("back_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.ArrowBack,
+                                    contentDescription = "Back to Dashboard"
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.School,
+                                contentDescription = "School Logo",
+                                modifier = Modifier.padding(start = 12.dp, end = 4.dp)
+                            )
+                        }
+                    },
+                    actions = {
+                        // Connection toggler Indicator
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f))
+                                .clickable {
+                                    viewModel.toggleFirebaseMode()
+                                    val mode = if (isFirebaseMode) "Firestore Live" else "Offline Sandbox"
+                                    Toast.makeText(context, "Database Mode Switched: $mode", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isFirebaseMode) Color(0xFF10B981) else Color(0xFFF59E0B))
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isFirebaseMode) "Cloud" else "Sandbox",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+
+                        if (currentUser != null && currentScreen != AppScreen.SETTINGS) {
+                            IconButton(
+                                onClick = { currentScreen = AppScreen.SETTINGS },
+                                modifier = Modifier.testTag("settings_top_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Settings,
+                                    contentDescription = "App Settings"
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = {
+                                viewModel.logoutUser()
+                                Toast.makeText(context, "Signed out securely", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.testTag("logout_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ExitToApp,
+                                contentDescription = "Secure Log Out"
+                            )
+                        }
+                    }
+                )
+            }
+        },
+        bottomBar = {
+            if (currentScreen != AppScreen.LOGIN && currentScreen != AppScreen.DASHBOARD) {
+                // Persistent elegant quick access ribbon at the bottom of child modules
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                ) {
+                    val items = listOf(
+                        Triple(AppScreen.DASHBOARD, Icons.Filled.Dashboard, "Home"),
+                        Triple(AppScreen.STUDENTS, Icons.Filled.People, "Students"),
+                        Triple(AppScreen.ATTENDANCE, Icons.Filled.CheckCircle, "Attendance"),
+                        Triple(AppScreen.FEES, Icons.Filled.AccountBalanceWallet, "Fees"),
+                        Triple(AppScreen.CHAT, Icons.Filled.Chat, "Chat")
+                    )
+                    items.forEach { (screen, icon, label) ->
+                        NavigationBarItem(
+                            icon = { Icon(imageVector = icon, contentDescription = label) },
+                            label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            selected = currentScreen == screen,
+                            onClick = { currentScreen = screen },
+                            modifier = Modifier.testTag("nav_${label.lowercase(Locale.ROOT)}")
+                        )
+                    }
+                }
+            }
+        },
+        modifier = modifier
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when (currentScreen) {
+                AppScreen.SPLASH -> SplashScreen()
+                AppScreen.LOGIN -> LoginScreen(viewModel = viewModel)
+                AppScreen.DASHBOARD -> DashboardScreen(
+                    viewModel = viewModel,
+                    onNavigate = { currentScreen = it }
+                )
+                AppScreen.STUDENTS -> StudentManagementScreen(viewModel = viewModel, onNavigate = { currentScreen = it })
+                AppScreen.TEACHERS -> TeacherManagementScreen(viewModel = viewModel)
+                AppScreen.ATTENDANCE -> AttendanceManagementScreen(viewModel = viewModel)
+                AppScreen.FEES -> FeesManagementScreen(viewModel = viewModel, onOpenFeeLedger = { selectedStudentForFeeLedger = it })
+                AppScreen.HOMEWORK -> HomeworkScreen(viewModel = viewModel)
+                AppScreen.NOTICES -> NoticeHubScreen(viewModel = viewModel)
+                AppScreen.TIMETABLE -> TimetableScreen(viewModel = viewModel)
+                AppScreen.CHAT -> ChatScreen(viewModel = viewModel)
+                AppScreen.REPORTS -> ReportsScreen(viewModel = viewModel)
+                AppScreen.CALENDAR -> SchoolCalendarScreen(viewModel = viewModel)
+                AppScreen.CLASSES -> AcademicClassesScreen(
+                    viewModel = viewModel, 
+                    onNavigate = { currentScreen = it },
+                    onOpenFeeLedger = { selectedStudentForFeeLedger = it }
+                )
+                AppScreen.ADD_STUDENT -> AddStudentScreen(
+                    viewModel = viewModel,
+                    onNavigate = { currentScreen = it }
+                )
+                AppScreen.SETTINGS -> SettingsScreen(viewModel = viewModel)
+            }
+
+            if (selectedStudentForFeeLedger != null) {
+                PupilsFeeLedgerSheet(
+                    viewModel = viewModel,
+                    student = selectedStudentForFeeLedger!!,
+                    onDismiss = { selectedStudentForFeeLedger = null }
+                )
+            }
+        }
+    }
+    }
+}
+
+@Composable
+fun SplashScreen() {
+    val scale = remember { androidx.compose.animation.core.Animatable(0.5f) }
+    val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    
+    LaunchedEffect(Unit) {
+        launch {
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+            )
+        }
+        alpha.animateTo(
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.tween(durationMillis = 800)
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF050B14)), // Dark midnight background
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(240.dp)
+                    .graphicsLayer(scaleX = scale.value, scaleY = scale.value, alpha = alpha.value),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "School Logo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(16.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "S.D. PUBLIC SCHOOL",
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            )
+            Text(
+                text = "Smart Management System",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp
+                )
+            )
+            Spacer(modifier = Modifier.height(48.dp))
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(36.dp)
+            )
+        }
+    }
+}
+
+// ==========================================
+// 1. SECURE AUTHENTICATION SYSTEM
+// ==========================================
+@Composable
+fun LoginScreen(viewModel: SchoolViewModel) {
+    var userId by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("PRINCIPAL") }
+    var selectedAuthRoute by remember { mutableStateOf("STANDARD") } // "STANDARD" or "OTP"
+    
+    // OTP states
+    var phoneInput by remember { mutableStateOf("") }
+    var otpCode by remember { mutableStateOf("") }
+    var verificationId by remember { mutableStateOf("") }
+    
+    // Forgot Password states
+    var showResetDialog by remember { mutableStateOf(false) }
+    var resetInput by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val loginError by viewModel.loginError.collectAsState()
+    val isAuthenticating by viewModel.isAuthenticating.collectAsState()
+
+    val rolesPresets = listOf(
+        Triple("PRINCIPAL", "प्रिंसिपल", "S.D.P.S. Principal"),
+        Triple("ADMIN", "एडमिन", "S.D.P.S. Admin"),
+        Triple("CLASS_TEACHER", "टीचर", "S.D.P.S. Teacher"),
+        Triple("STUDENT", "स्टूडेंट", "S.D.P.S. Student")
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Logo with Golden Radial Shadow
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(Color(0xFFFFB703).copy(alpha = 0.3f), Color.Transparent),
+                        radius = 200f
+                    ),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "School Logo",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(120.dp).padding(8.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = "Welcome Back",
+            style = MaterialTheme.typography.displayMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        )
+        Text(
+            text = "Sign in to S.D. Public School",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Auth Route Toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                .padding(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (selectedAuthRoute == "STANDARD") MaterialTheme.colorScheme.surface else Color.Transparent)
+                    .clickable { selectedAuthRoute = "STANDARD" }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "ID & Password",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = if (selectedAuthRoute == "STANDARD") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (selectedAuthRoute == "OTP") MaterialTheme.colorScheme.surface else Color.Transparent)
+                    .clickable { selectedAuthRoute = "OTP" }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Mobile OTP",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = if (selectedAuthRoute == "OTP") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (selectedAuthRoute == "STANDARD") {
+            // Standard ID / Password Form
+            OutlinedTextField(
+                value = userId,
+                onValueChange = { userId = it.uppercase() },
+                label = { Text("User ID or Phone") },
+                leadingIcon = { Icon(Icons.Filled.Person, null) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                leadingIcon = { Icon(Icons.Filled.Lock, null) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                visualTransformation = PasswordVisualTransformation(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = { showResetDialog = true }) {
+                    Text("Forgot Password?", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = { viewModel.loginUser(userId, selectedRole, "", password) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isAuthenticating
+            ) {
+                if (isAuthenticating) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Sign In", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                }
+            }
+        } else {
+            // OTP Form
+            OutlinedTextField(
+                value = phoneInput,
+                onValueChange = { phoneInput = it },
+                label = { Text("Phone Number (+91)") },
+                leadingIcon = { Icon(Icons.Filled.Phone, null) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (verificationId.isNotEmpty()) {
+                OutlinedTextField(
+                    value = otpCode,
+                    onValueChange = { otpCode = it },
+                    label = { Text("6-digit OTP") },
+                    leadingIcon = { Icon(Icons.Filled.Message, null) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { viewModel.verifyOtpAndLogin(verificationId, otpCode, phoneInput) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isAuthenticating
+                ) {
+                    if (isAuthenticating) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Verify & Sign In", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { 
+                        if(activity != null) {
+                            viewModel.startPhoneVerification(phoneInput, activity, { vId -> verificationId = vId }, { /* error */ })
+                        } else {
+                            Toast.makeText(context, "Cannot send OTP (Activity context missing)", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isAuthenticating && phoneInput.length >= 10
+                ) {
+                    if (isAuthenticating) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Send OTP", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+            }
+        }
+
+        loginError?.let { err ->
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = err,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+        
+        Text("Sign in as Demo User", style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            rolesPresets.forEach { preset ->
+                ElevatedCard(
+                    onClick = { 
+                        selectedRole = preset.first
+                        userId = when (preset.first) {
+                            "PRINCIPAL" -> "SDPS-PRIN-01"
+                            "ADMIN" -> "SDPS-ADM-01"
+                            "CLASS_TEACHER" -> "SDPS-TCH-01"
+                            "STUDENT" -> "SDPS-STU-01"
+                            else -> "SDPS-STU-01"
+                        }
+                        password = "password123"
+                    },
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = if (selectedRole == preset.first) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = preset.second,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = if (selectedRole == preset.first) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+    
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(
+                                brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                    colors = listOf(Color(0xFFFFB703).copy(alpha = 0.3f), Color.Transparent),
+                                    radius = 120f
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "School Logo",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Reset Password")
+                }
+            },
+            text = {
+                OutlinedTextField(
+                    value = resetInput,
+                    onValueChange = { resetInput = it },
+                    label = { Text("Enter Email or Phone") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { 
+                    viewModel.sendPasswordReset(resetInput, {}, {})
+                    showResetDialog = false
+                }) { Text("Send Reset Link") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+}
+
+// ==========================================
+// 2. SMART DASHBOARD
+// ==========================================
+@Composable
+fun DashboardScreen(
+    viewModel: SchoolViewModel,
+    onNavigate: (AppScreen) -> Unit
+) {
+    val context = LocalContext.current
+    val currentUser by viewModel.currentUser.collectAsState()
+    val teachersList by viewModel.teachersState.collectAsState()
+    val students by viewModel.studentsState.collectAsState()
+    val attendanceList by viewModel.attendanceState.collectAsState()
+    val feesList by viewModel.feesState.collectAsState()
+    val notices by viewModel.noticesState.collectAsState()
+
+    val totalStudentsCount = students.size
+    val lastNotice = notices.firstOrNull()?.title ?: "No new announcements available"
+
+    val todayAttendanceText = if (attendanceList.isNotEmpty()) {
+        val presentCount = attendanceList.count { it.status == "Present" }
+        val rate = (presentCount.toDouble() / attendanceList.size * 100).toInt()
+        "$rate%"
+    } else {
+        "N/A"
+    }
+
+    val totalRevenueText = if (feesList.isNotEmpty()) {
+        val total = feesList.sumOf { it.paidAmount }
+        "₹${total}"
+    } else {
+        "₹0"
+    }
+
+    var showProfileDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        // App Top Bar / Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "School Logo",
+                    modifier = Modifier.size(40.dp).clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text("S.D. PUBLIC SCHOOL", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
+                    Text("JIGANA", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary))
+                }
+            }
+            Box {
+                IconButton(onClick = { onNavigate(AppScreen.NOTICES) }) {
+                    Icon(Icons.Filled.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onBackground)
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 8.dp, end = 8.dp)
+                        .size(10.dp)
+                        .background(Color(0xFFEF4444), CircleShape)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Profile Welcome Banner
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (currentUser?.avatarUrl.isNullOrEmpty()) {
+                    Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    AsyncImage(
+                        model = currentUser?.avatarUrl,
+                        contentDescription = "Profile Photo",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                if (currentUser?.role == "PRINCIPAL") {
+                    Icon(
+                        Icons.Filled.Stars, 
+                        contentDescription = null, 
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.align(Alignment.BottomEnd).size(20.dp).background(MaterialTheme.colorScheme.background, CircleShape)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text("Good Morning,", style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                Text(currentUser?.name ?: "User", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
+                
+                val roleStr = currentUser?.role?.uppercase()?.trim() ?: ""
+                val roleDisplayText = if (roleStr == "TEACHER" || roleStr == "CLASS_TEACHER") {
+                    val teacherRecord = teachersList.find { it.teacherId == currentUser?.userId }
+                    val assignedClass = teacherRecord?.classTeacherOf ?: ""
+                    if (assignedClass.isNotEmpty()) {
+                        "CLASS TEACHER OF ${assignedClass.uppercase()}"
+                    } else {
+                        "SUBJECT TEACHER"
+                    }
+                } else {
+                    roleStr.replace("_", " ")
+                }
+                Text(roleDisplayText, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        val roleStr = currentUser?.role?.uppercase()?.trim() ?: ""
+        when (roleStr) {
+            "PRINCIPAL", "ADMIN", "HEAD_ADMIN" -> {
+                PrincipalDashboardTab(
+                    viewModel = viewModel,
+                    totalStudentsCount = totalStudentsCount,
+                    todayAttendanceText = todayAttendanceText,
+                    totalRevenueText = totalRevenueText,
+                    lastNotice = lastNotice,
+                    onNavigate = onNavigate
+                )
+            }
+            "TEACHER", "CLASS_TEACHER" -> {
+                TeacherDashboardTab(
+                    viewModel = viewModel,
+                    totalStudentsCount = totalStudentsCount,
+                    todayAttendanceText = todayAttendanceText,
+                    lastNotice = lastNotice,
+                    onNavigate = onNavigate
+                )
+            }
+            "STUDENT" -> {
+                StudentDashboardTab(
+                    currentUser = currentUser,
+                    lastNotice = lastNotice,
+                    onNavigate = onNavigate
+                )
+            }
+            else -> {
+                GeneralDashboardTab(
+                    totalStudentsCount = totalStudentsCount,
+                    todayAttendanceText = todayAttendanceText,
+                    totalRevenueText = totalRevenueText,
+                    lastNotice = lastNotice,
+                    onNavigate = onNavigate,
+                    currentUser = currentUser
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PrincipalDashboardTab(
+    viewModel: SchoolViewModel,
+    totalStudentsCount: Int,
+    todayAttendanceText: String,
+    totalRevenueText: String,
+    lastNotice: String,
+    onNavigate: (AppScreen) -> Unit
+) {
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Cloud Sync Status (from the design)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                .clickable {
+                    viewModel.forceSync()
+                    android.widget.Toast.makeText(context, "Cloud Sync Triggered! Updating data...", android.widget.Toast.LENGTH_SHORT).show()
+                }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CloudDone,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Cloud Sync Status", style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                Text("Tap here to force sync", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary))
+                Text("Connected to Firebase", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+            }
+            Icon(
+                imageVector = Icons.Filled.Sync,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Quick Overview Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Quick Overview", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
+            Text("View All", style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold), modifier = Modifier.clickable { onNavigate(AppScreen.STUDENTS) })
+        }
+
+        // Quick Overview Stats Row (Students, Attendance, Revenue, Pending Fees)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Students
+            DashboardStatCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.People,
+                iconTint = Color(0xFF00E5FF),
+                value = "$totalStudentsCount",
+                label = "Students",
+                subLabel = "+12 this month",
+                subLabelColor = Color(0xFF10B981)
+            )
+            // Attendance
+            DashboardStatCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.FactCheck,
+                iconTint = Color(0xFF8B5CF6),
+                value = todayAttendanceText,
+                label = "Attendance",
+                subLabel = "+5% yesterday",
+                subLabelColor = Color(0xFF10B981)
+            )
+            // Revenue
+            DashboardStatCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.CurrencyRupee,
+                iconTint = Color(0xFFEC4899),
+                value = totalRevenueText,
+                label = "Revenue",
+                subLabel = "+18% this month",
+                subLabelColor = Color(0xFF10B981)
+            )
+            // Pending Fees
+            DashboardStatCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.Warning,
+                iconTint = Color(0xFFF59E0B),
+                value = "27", // Mock value for visual
+                label = "Pending Fees",
+                subLabel = "View Details",
+                subLabelColor = MaterialTheme.colorScheme.primary,
+                onClick = { onNavigate(AppScreen.FEES) }
+            )
+        }
+
+        // Quick Actions Header
+        Text("Quick Actions", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
+
+        // Quick Actions Grid (3 rows)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.Group, label = "Students", tint = Color(0xFF10B981), onClick = { onNavigate(AppScreen.STUDENTS) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.PersonSearch, label = "Teachers", tint = Color(0xFF3B82F6), onClick = { onNavigate(AppScreen.TEACHERS) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.HowToReg, label = "Attendance", tint = Color(0xFF3B82F6), onClick = { onNavigate(AppScreen.ATTENDANCE) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.Payments, label = "Fees", tint = Color(0xFFF59E0B), onClick = { onNavigate(AppScreen.FEES) })
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.MenuBook, label = "Homework", tint = Color(0xFFEC4899), onClick = { onNavigate(AppScreen.HOMEWORK) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.Campaign, label = "Notices", tint = Color(0xFFEF4444), onClick = { onNavigate(AppScreen.NOTICES) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.EventNote, label = "Timetable", tint = Color(0xFF00E5FF), onClick = { onNavigate(AppScreen.TIMETABLE) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.BarChart, label = "Reports", tint = Color(0xFF8B5CF6), onClick = { onNavigate(AppScreen.REPORTS) })
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.Class, label = "Classes", tint = Color(0xFFF59E0B), onClick = { onNavigate(AppScreen.CLASSES) })
+                QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Filled.CalendarMonth, label = "Calendar", tint = Color(0xFF3B82F6), onClick = { onNavigate(AppScreen.CALENDAR) })
+                Spacer(modifier = Modifier.weight(2f)) // Empty space for alignment
+            }
+        }
+
+        // Today's Schedule & Recent Notices row (on tablet) or column (on phone)
+        // Here we just use Column
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Recent Notices", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
+            Text("View All", style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold), modifier = Modifier.clickable { onNavigate(AppScreen.NOTICES) })
+        }
+        
+        ElevatedCard(
+            onClick = { onNavigate(AppScreen.NOTICES) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.size(48.dp).background(Color(0xFFF59E0B).copy(alpha=0.2f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Campaign, null, tint = Color(0xFFF59E0B))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(lastNotice, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("Just updated", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                }
+                Box(modifier = Modifier.background(Color(0xFFEF4444).copy(alpha=0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    Text("New", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFEF4444), fontWeight = FontWeight.Bold))
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+}
+
+@Composable
+fun DashboardStatCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    value: String,
+    label: String,
+    subLabel: String,
+    subLabelColor: Color,
+    onClick: (() -> Unit)? = null
+) {
+    ElevatedCard(
+        modifier = modifier.height(130.dp).then(if(onClick != null) Modifier.clickable{onClick()} else Modifier),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier.size(36.dp).background(iconTint.copy(alpha = 0.2f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+            }
+            Text(value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface))
+            Text(label, style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant), maxLines = 1)
+            Text(subLabel, style = MaterialTheme.typography.labelSmall.copy(color = subLabelColor, fontSize = 9.sp), maxLines = 1)
+        }
+    }
+}
+
+@Composable
+fun QuickActionItem(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    tint: Color,
+    onClick: () -> Unit
