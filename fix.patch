@@ -1,0 +1,10 @@
+--- app/src/main/java/com/example/ui/screens/AddStudentScreen.kt
++++ app/src/main/java/com/example/ui/screens/AddStudentScreen.kt
+@@ -176,10 +176,6 @@
+                         }
+                     }
+-
+-                    }
+-                    }
+                     OutlinedTextField(value = sRoll, onValueChange = { sRoll = it }, label = { Text("Roll No") }, modifier = Modifier.weight(1f))
+                 }

@@ -1,0 +1,1003 @@
+2041: depth=1 if (selectedTeacherForProfile != null) {
+2042: depth=1 val teacherObj = selectedTeacherForProfi
+2043: depth=1 // Instagram-Style Detailed Profile scre
+2044: depth=1 Column(
+2045: depth=1 modifier = Modifier
+2046: depth=1 .fillMaxSize()
+2047: depth=1 .background(MaterialTheme.colorScheme.ba
+2048: depth=1 .verticalScroll(rememberScrollState())
+2049: depth=1 .padding(16.dp)
+2050: depth=2 ) {
+2051: depth=2 // Top Navigation header
+2052: depth=2 Row(
+2053: depth=2 modifier = Modifier.fillMaxWidth(),
+2054: depth=2 verticalAlignment = Alignment.CenterVert
+2055: depth=3 ) {
+2056: depth=3 IconButton(
+2057: depth=3 onClick = { selectedTeacherForProfile = 
+2058: depth=3 modifier = Modifier.testTag("profile_bac
+2059: depth=4 ) {
+2060: depth=4 Icon(Icons.Filled.ArrowBack, contentDesc
+2061: depth=3 }
+2062: depth=3 Spacer(modifier = Modifier.width(8.dp))
+2063: depth=3 Text("Teacher Profile", style = Material
+2064: depth=2 }
+2066: depth=2 Spacer(modifier = Modifier.height(16.dp)
+2068: depth=2 // centered circular avatar
+2069: depth=2 Box(
+2070: depth=2 modifier = Modifier
+2071: depth=2 .fillMaxWidth()
+2072: depth=2 .padding(vertical = 12.dp),
+2073: depth=2 contentAlignment = Alignment.Center
+2074: depth=3 ) {
+2075: depth=4 Column(horizontalAlignment = Alignment.C
+2076: depth=4 val matchingUser = users.find { it.userI
+2077: depth=4 val resolvedRole = matchingUser?.role ?:
+2078: depth=4 val resolvedEmail = matchingUser?.email 
+2079: depth=4 val resolvedClassTeacher = teacherObj.cl
+2081: depth=4 // Avatar with Overlapping mini medal ba
+2082: depth=5 Box(contentAlignment = Alignment.BottomE
+2083: depth=5 Box(
+2084: depth=5 modifier = Modifier
+2085: depth=5 .size(110.dp)
+2086: depth=5 .clip(CircleShape)
+2087: depth=5 .background(
+2088: depth=5 Brush.linearGradient(
+2089: depth=5 colors = listOf(
+2090: depth=5 MaterialTheme.colorScheme.primary,
+2091: depth=5 MaterialTheme.colorScheme.secondary
+2092: depth=5 )
+2093: depth=5 )
+2094: depth=5 ),
+2095: depth=5 contentAlignment = Alignment.Center
+2096: depth=6 ) {
+2097: depth=6 Box(
+2098: depth=6 modifier = Modifier
+2099: depth=6 .size(102.dp)
+2100: depth=6 .clip(CircleShape)
+2101: depth=6 .background(MaterialTheme.colorScheme.su
+2102: depth=6 contentAlignment = Alignment.Center
+2103: depth=7 ) {
+2104: depth=8 if (teacherObj.photoUrl.isNotEmpty()) {
+2105: depth=8 coil.compose.AsyncImage(
+2106: depth=8 model = teacherObj.photoUrl,
+2107: depth=8 contentDescription = "Profile Photo",
+2108: depth=8 modifier = Modifier.fillMaxSize().clip(C
+2109: depth=8 contentScale = androidx.compose.ui.layou
+2110: depth=8 // error = coil.compose.rememberAsyncIma
+2111: depth=8 )
+2112: depth=8 } else {
+2113: depth=8 Text(
+2114: depth=8 text = teacherObj.name.split(" ").mapNot
+2115: depth=8 style = MaterialTheme.typography.headlin
+2116: depth=8 fontWeight = FontWeight.ExtraBold,
+2117: depth=8 color = MaterialTheme.colorScheme.primar
+2118: depth=8 )
+2119: depth=8 )
+2120: depth=7 }
+2121: depth=6 }
+2122: depth=5 }
+2124: depth=5 // Badge Overlap
+2125: depth=5 val overlayDetails = getCredentialBadgeD
+2126: depth=6 if (overlayDetails != null) {
+2127: depth=6 val overlayColor = overlayDetails.second
+2128: depth=6 val overlayIcon = overlayDetails.third
+2129: depth=6 Box(
+2130: depth=6 modifier = Modifier
+2131: depth=6 .size(34.dp)
+2132: depth=6 .offset(x = (4).dp, y = (4).dp)
+2133: depth=6 .clip(CircleShape)
+2134: depth=6 .background(Brush.linearGradient(listOf(
+2135: depth=6 .padding(2.dp)
+2136: depth=6 .clip(CircleShape)
+2137: depth=6 .background(Color(0xFF1E293B)),
+2138: depth=6 contentAlignment = Alignment.Center
+2139: depth=7 ) {
+2140: depth=7 Icon(
+2141: depth=7 imageVector = overlayIcon,
+2142: depth=7 contentDescription = "Avatar Badge Seal"
+2143: depth=7 tint = overlayColor,
+2144: depth=7 modifier = Modifier.size(18.dp)
+2145: depth=7 )
+2146: depth=6 }
+2147: depth=5 }
+2148: depth=4 }
+2150: depth=4 Spacer(modifier = Modifier.height(12.dp)
+2151: depth=4 Text(teacherObj.name, style = MaterialTh
+2152: depth=4 Spacer(modifier = Modifier.height(4.dp))
+2154: depth=4 // Stylized badge
+2155: depth=4 Box(
+2156: depth=4 modifier = Modifier
+2157: depth=4 .clip(RoundedCornerShape(20.dp))
+2158: depth=4 .background(MaterialTheme.colorScheme.pr
+2159: depth=4 .padding(horizontal = 16.dp, vertical = 
+2160: depth=5 ) {
+2161: depth=5 Text(
+2162: depth=5 text = if (resolvedClassTeacher.isNotEmp
+2163: depth=5 style = MaterialTheme.typography.labelSm
+2164: depth=5 color = MaterialTheme.colorScheme.onPrim
+2165: depth=5 )
+2166: depth=4 }
+2168: depth=4 // Render dynamic Role Credential Badge 
+2169: depth=4 DynamicRoleCredentialBadge(
+2170: depth=4 userRole = resolvedRole,
+2171: depth=4 userEmail = resolvedEmail,
+2172: depth=4 classTeacherOf = resolvedClassTeacher,
+2173: depth=4 modifier = Modifier.padding(top = 8.dp)
+2174: depth=4 )
+2176: depth=5 if (isPrincipal && resolvedRole != "CLAS
+2177: depth=5 Spacer(modifier = Modifier.height(8.dp))
+2178: depth=5 OutlinedButton(
+2179: depth=5 onClick = { showClassChangeDialog = true
+2180: depth=5 colors = ButtonDefaults.outlinedButtonCo
+2181: depth=5 modifier = Modifier.testTag("promote_cla
+2182: depth=6 ) {
+2183: depth=6 Icon(Icons.Filled.Star, contentDescripti
+2184: depth=6 Spacer(modifier = Modifier.width(4.dp))
+2185: depth=6 Text("Promote to Class Teacher")
+2186: depth=5 }
+2187: depth=5 } else if (resolvedRole == "CLASS_TEACHE
+2188: depth=5 Spacer(modifier = Modifier.height(4.dp))
+2189: depth=5 Text("Class Teacher of $resolvedClassTea
+2190: depth=4 }
+2191: depth=3 }
+2192: depth=2 }
+2194: depth=2 Spacer(modifier = Modifier.height(16.dp)
+2196: depth=2 // Biography stats list grid layout
+2197: depth=2 ElevatedCard(
+2198: depth=2 modifier = Modifier.fillMaxWidth(),
+2199: depth=2 shape = RoundedCornerShape(16.dp),
+2200: depth=2 colors = CardDefaults.elevatedCardColors
+2201: depth=3 ) {
+2202: depth=4 Column(modifier = Modifier.padding(16.dp
+2203: depth=4 Text("Bio Data & Security Credentials", 
+2205: depth=4 Divider(color = MaterialTheme.colorSchem
+2207: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2208: depth=5 Text("User Identifier (Login ID)", style
+2209: depth=5 Text(teacherObj.teacherId, style = Mater
+2210: depth=4 }
+2212: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2213: depth=5 Text("Active Classroom Assigned", style 
+2214: depth=5 Text(teacherObj.classesAssigned, style =
+2215: depth=4 }
+2217: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2218: depth=5 Text("Direct Mobile Number", style = Mat
+2219: depth=5 Text(teacherObj.phone, style = MaterialT
+2220: depth=4 }
+2222: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2223: depth=5 Text("Corporate Email Address", modifier
+2224: depth=5 Text(teacherObj.email, style = MaterialT
+2225: depth=4 }
+2227: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2228: depth=5 Text("Department / Subject Specialty", s
+2229: depth=5 Text(teacherObj.subject, style = Materia
+2230: depth=4 }
+2232: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2233: depth=5 Text("Academic Qualifications", style = 
+2234: depth=5 Text(teacherObj.qualification.ifBlank { 
+2235: depth=4 }
+2237: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2238: depth=5 Text("Teaching Experience", style = Mate
+2239: depth=5 Text(teacherObj.experience.ifBlank { "3 
+2240: depth=4 }
+2242: depth=5 Row(modifier = Modifier.fillMaxWidth(), 
+2243: depth=5 Text("Official Joining Date", style = Ma
+2244: depth=5 Text(teacherObj.joiningDate.ifBlank { "2
+2245: depth=4 }
+2246: depth=3 }
+2247: depth=2 }
+2249: depth=2 Spacer(modifier = Modifier.height(16.dp)
+2251: depth=2 // Salary Management Subsection strictly
+2252: depth=3 if (currentUser?.role == "PRINCIPAL") {
+2253: depth=3 val monthsList = listOf("April", "May", 
+2254: depth=3 var selectedMonthLedger by remember { mu
+2256: depth=3 // Fetch dynamic payroll list
+2257: depth=3 val teacherId = teacherObj.teacherId
+2258: depth=3 val matchingPayrolls = payrolls.filter {
+2260: depth=3 // Cumulative calculations
+2261: depth=3 val totalPaidAmt = matchingPayrolls.filt
+2262: depth=3 val totalPendingAmt = matchingPayrolls.f
+2264: depth=3 // Editing payroll state
+2265: depth=3 var showSalaryEditDialog by remember { m
+2266: depth=3 var editBasicSalary by remember { mutabl
+2267: depth=3 var editBonus by remember { mutableState
+2268: depth=3 var editAllowances by remember { mutable
+2269: depth=3 var editDeductions by remember { mutable
+2270: depth=3 var editAbsentDays by remember { mutable
+2271: depth=3 var editStatus by remember { mutableStat
+2272: depth=3 var editRefDetails by remember { mutable
+2273: depth=3 var editRemarks by remember { mutableSta
+2275: depth=3 // Slip overlay state
+2276: depth=3 var showReceiptSlipDialog by remember { 
+2278: depth=3 // Active configuration
+2279: depth=3 val activePayroll = matchingPayrolls.fin
+2280: depth=3 payrollId = "${teacherId}_$selectedMonth
+2281: depth=3 teacherId = teacherId,
+2282: depth=3 month = selectedMonthLedger,
+2283: depth=3 basicSalary = 52500.0,
+2284: depth=3 bonus = 1500.0,
+2285: depth=3 allowances = 3000.0,
+2286: depth=3 deductions = 2000.0,
+2287: depth=3 netSalary = 55000.0,
+2288: depth=3 status = if (selectedMonthLedger == "Apr
+2289: depth=3 paymentDetails = "Direct NEFT Ref #TXN93
+2290: depth=3 remarks = "Default projection"
+2291: depth=3 )
+2293: depth=3 ElevatedCard(
+2294: depth=3 modifier = Modifier.fillMaxWidth(),
+2295: depth=3 shape = RoundedCornerShape(16.dp),
+2296: depth=3 colors = CardDefaults.elevatedCardColors
+2297: depth=4 ) {
+2298: depth=5 Column(modifier = Modifier.padding(16.dp
+2299: depth=5 Row(
+2300: depth=5 modifier = Modifier.fillMaxWidth(),
+2301: depth=5 horizontalArrangement = Arrangement.Spac
+2302: depth=5 verticalAlignment = Alignment.CenterVert
+2303: depth=6 ) {
+2304: depth=7 Row(verticalAlignment = Alignment.Center
+2305: depth=7 Icon(Icons.Filled.Payments, contentDescr
+2306: depth=7 Spacer(modifier = Modifier.width(8.dp))
+2307: depth=7 Text("Teacher Payroll & Salary Ledger", 
+2308: depth=6 }
+2309: depth=6 OutlinedButton(
+2310: depth=6 onClick = { showReceiptSlipDialog = true
+2311: depth=6 modifier = Modifier.testTag("btn_salary_
+2312: depth=7 ) {
+2313: depth=7 Icon(Icons.Filled.Print, null, modifier 
+2314: depth=7 Spacer(modifier = Modifier.width(4.dp))
+2315: depth=7 Text("Salary Slip", fontSize = 11.sp)
+2316: depth=6 }
+2317: depth=5 }
+2319: depth=5 Spacer(modifier = Modifier.height(12.dp)
+2321: depth=5 // Analytics overview card grid
+2322: depth=5 Row(
+2323: depth=5 modifier = Modifier.fillMaxWidth(),
+2324: depth=5 horizontalArrangement = Arrangement.spac
+2325: depth=6 ) {
+2326: depth=6 ElevatedCard(
+2327: depth=6 modifier = Modifier.weight(1f),
+2328: depth=6 colors = CardDefaults.elevatedCardColors
+2329: depth=6 shape = RoundedCornerShape(10.dp)
+2330: depth=7 ) {
+2331: depth=8 Column(modifier = Modifier.padding(10.dp
+2332: depth=8 Text("FY Total Released", fontSize = 10.
+2333: depth=8 Text("₹$totalPaidAmt", fontSize = 14.sp,
+2334: depth=7 }
+2335: depth=6 }
+2336: depth=6 ElevatedCard(
+2337: depth=6 modifier = Modifier.weight(1f),
+2338: depth=6 colors = CardDefaults.elevatedCardColors
+2339: depth=6 shape = RoundedCornerShape(10.dp)
+2340: depth=7 ) {
+2341: depth=8 Column(modifier = Modifier.padding(10.dp
+2342: depth=8 Text("FY Total Outstanding", fontSize = 
+2343: depth=8 Text("₹$totalPendingAmt", fontSize = 14.
+2344: depth=7 }
+2345: depth=6 }
+2346: depth=5 }
+2348: depth=5 Spacer(modifier = Modifier.height(14.dp)
+2350: depth=5 Text("Fiscal Monthly Ledger (Select Mont
+2351: depth=5 Spacer(modifier = Modifier.height(6.dp))
+2353: depth=5 // Horizontally scrollable list of month
+2354: depth=5 LazyRow(
+2355: depth=5 modifier = Modifier.fillMaxWidth(),
+2356: depth=5 horizontalArrangement = Arrangement.spac
+2357: depth=6 ) {
+2358: depth=7 items(monthsList) { month ->
+2359: depth=7 val currentRecord = matchingPayrolls.fin
+2360: depth=7 val monthStatus = currentRecord?.status 
+2361: depth=7 val isSelected = month == selectedMonthL
+2362: depth=8 val containerColor = if (isSelected) {
+2363: depth=8 MaterialTheme.colorScheme.primary
+2364: depth=8 } else {
+2365: depth=8 MaterialTheme.colorScheme.surfaceVariant
+2366: depth=7 }
+2367: depth=8 val textColor = if (isSelected) {
+2368: depth=8 MaterialTheme.colorScheme.onPrimary
+2369: depth=8 } else {
+2370: depth=8 MaterialTheme.colorScheme.onSurfaceVaria
+2371: depth=7 }
+2373: depth=7 Surface(
+2374: depth=7 modifier = Modifier
+2375: depth=7 .clickable { selectedMonthLedger = month
+2376: depth=7 .clip(RoundedCornerShape(20.dp)),
+2377: depth=7 color = containerColor,
+2378: depth=7 shape = RoundedCornerShape(20.dp),
+2379: depth=7 border = BorderStroke(1.dp, MaterialThem
+2380: depth=8 ) {
+2381: depth=8 Row(
+2382: depth=8 modifier = Modifier.padding(horizontal =
+2383: depth=8 verticalAlignment = Alignment.CenterVert
+2384: depth=8 horizontalArrangement = Arrangement.spac
+2385: depth=9 ) {
+2386: depth=9 Box(
+2387: depth=9 modifier = Modifier
+2388: depth=9 .size(8.dp)
+2389: depth=9 .clip(CircleShape)
+2390: depth=9 .background(if (monthStatus == "Paid") C
+2391: depth=9 )
+2392: depth=9 Text(month, fontSize = 12.sp, fontWeight
+2393: depth=8 }
+2394: depth=7 }
+2395: depth=6 }
+2396: depth=5 }
+2398: depth=5 Spacer(modifier = Modifier.height(14.dp)
+2400: depth=5 // Dynamic Month Ledger details
+2401: depth=5 Box(
+2402: depth=5 modifier = Modifier
+2403: depth=5 .fillMaxWidth()
+2404: depth=5 .clip(RoundedCornerShape(12.dp))
+2405: depth=5 .background(MaterialTheme.colorScheme.se
+2406: depth=5 .border(BorderStroke(1.dp, MaterialTheme
+2407: depth=5 .padding(14.dp)
+2408: depth=6 ) {
+2409: depth=7 Column(verticalArrangement = Arrangement
+2410: depth=8 Row(modifier = Modifier.fillMaxWidth(), 
+2411: depth=8 Text("Ledger Month: $selectedMonthLedger
+2412: depth=8 Surface(
+2413: depth=8 color = if (activePayroll.status == "Pai
+2414: depth=8 shape = RoundedCornerShape(8.dp)
+2415: depth=9 ) {
+2416: depth=9 Text(
+2417: depth=9 text = activePayroll.status.uppercase(),
+2418: depth=9 fontSize = 11.sp,
+2419: depth=9 fontWeight = FontWeight.ExtraBold,
+2420: depth=9 color = if (activePayroll.status == "Pai
+2421: depth=9 modifier = Modifier.padding(horizontal =
+2422: depth=9 )
+2423: depth=8 }
+2424: depth=7 }
+2426: depth=7 Divider(color = MaterialTheme.colorSchem
+2428: depth=8 Row(modifier = Modifier.fillMaxWidth(), 
+2429: depth=8 Text("Basic Salary:", fontSize = 12.sp, 
+2430: depth=8 Text("₹${activePayroll.basicSalary}", fo
+2431: depth=7 }
+2432: depth=8 Row(modifier = Modifier.fillMaxWidth(), 
+2433: depth=8 Text("Bonus Awarded:", fontSize = 12.sp,
+2434: depth=8 Text("+ ₹${activePayroll.bonus}", fontSi
+2435: depth=7 }
+2436: depth=8 Row(modifier = Modifier.fillMaxWidth(), 
+2437: depth=8 Text("Allowances (HRA/Medical/Conveyance
+2438: depth=8 Text("+ ₹${activePayroll.allowances}", f
+2439: depth=7 }
+2440: depth=8 Row(modifier = Modifier.fillMaxWidth(), 
+2441: depth=8 Text("Deductions & Arrears (PF/Tax):", f
+2442: depth=8 Text("- ₹${activePayroll.deductions}", f
+2443: depth=7 }
+2445: depth=7 Divider(color = MaterialTheme.colorSchem
+2447: depth=8 Row(modifier = Modifier.fillMaxWidth(), 
+2448: depth=8 Text("Net Salary Generated:", fontSize =
+2449: depth=8 Text("₹${activePayroll.netSalary}", font
+2450: depth=7 }
+2452: depth=7 Spacer(modifier = Modifier.height(4.dp))
+2453: depth=7 Text(
+2454: depth=7 text = "Payment details: ${activePayroll
+2455: depth=7 fontSize = 11.sp,
+2456: depth=7 color = Color.Gray,
+2457: depth=7 fontWeight = FontWeight.Medium
+2458: depth=7 )
+2459: depth=8 if (activePayroll.remarks.isNotEmpty()) 
+2460: depth=8 Text(
+2461: depth=8 text = "Remarks: ${activePayroll.remarks
+2462: depth=8 fontSize = 11.sp,
+2463: depth=8 color = Color.Gray,
+2464: depth=8 style = androidx.compose.ui.text.TextSty
+2465: depth=8 )
+2466: depth=7 }
+2468: depth=8 if (activePayroll.status == "Pending") {
+2469: depth=8 Row(
+2470: depth=8 modifier = Modifier
+2471: depth=8 .fillMaxWidth()
+2472: depth=8 .clip(RoundedCornerShape(6.dp))
+2473: depth=8 .background(Color(0xFFFFEBEE))
+2474: depth=8 .padding(6.dp),
+2475: depth=8 verticalAlignment = Alignment.CenterVert
+2476: depth=8 horizontalArrangement = Arrangement.spac
+2477: depth=9 ) {
+2478: depth=9 Icon(Icons.Filled.Warning, null, tint = 
+2479: depth=9 Text("DUE SALARY ALERT: Outstanding unpa
+2480: depth=8 }
+2481: depth=7 }
+2483: depth=7 Spacer(modifier = Modifier.height(4.dp))
+2485: depth=7 Button(
+2486: depth=8 onClick = {
+2487: depth=8 editBasicSalary = activePayroll.basicSal
+2488: depth=8 editBonus = activePayroll.bonus.toInt().
+2489: depth=8 editAllowances = activePayroll.allowance
+2490: depth=8 editDeductions = activePayroll.deduction
+2491: depth=8 editAbsentDays = "0"
+2492: depth=8 editStatus = activePayroll.status
+2493: depth=8 editRefDetails = activePayroll.paymentDe
+2494: depth=8 editRemarks = activePayroll.remarks.ifBl
+2495: depth=8 showSalaryEditDialog = true
+2496: depth=7 },
+2497: depth=7 modifier = Modifier.fillMaxWidth(),
+2498: depth=7 colors = ButtonDefaults.buttonColors(con
+2499: depth=8 ) {
+2500: depth=8 Icon(Icons.Filled.EditNote, null, modifi
+2501: depth=8 Spacer(modifier = Modifier.width(6.dp))
+2502: depth=8 Text("Release / Update Ledger", fontWeig
+2503: depth=7 }
+2504: depth=6 }
+2505: depth=5 }
+2506: depth=4 }
+2507: depth=3 }
+2509: depth=3 Spacer(modifier = Modifier.height(16.dp)
+2511: depth=3 // Release Salary Input sheet Dialog
+2512: depth=4 if (showSalaryEditDialog) {
+2513: depth=4 AlertDialog(
+2514: depth=4 onDismissRequest = { showSalaryEditDialo
+2515: depth=5 title = {
+2516: depth=5 Text(
+2517: depth=5 "Manage $selectedMonthLedger Salary Ledg
+2518: depth=5 style = MaterialTheme.typography.titleMe
+2519: depth=5 color = MaterialTheme.colorScheme.primar
+2520: depth=5 )
+2521: depth=4 },
+2522: depth=5 text = {
+2523: depth=5 Column(
+2524: depth=5 modifier = Modifier
+2525: depth=5 .fillMaxWidth()
+2526: depth=5 .verticalScroll(rememberScrollState()),
+2527: depth=5 verticalArrangement = Arrangement.spaced
+2528: depth=6 ) {
+2529: depth=6 Text(
+2530: depth=6 text = "Smart attendance metrics & auto 
+2531: depth=6 fontSize = 11.sp,
+2532: depth=6 color = Color.DarkGray
+2533: depth=6 )
+2535: depth=6 OutlinedTextField(
+2536: depth=6 value = editBasicSalary,
+2537: depth=6 onValueChange = { editBasicSalary = it }
+2538: depth=6 label = { Text("Basic Salary (Base pay)"
+2539: depth=6 keyboardOptions = KeyboardOptions(keyboa
+2540: depth=6 modifier = Modifier.fillMaxWidth()
+2541: depth=6 )
+2543: depth=6 OutlinedTextField(
+2544: depth=6 value = editBonus,
+2545: depth=6 onValueChange = { editBonus = it },
+2546: depth=6 label = { Text("Performance Bonus (₹)") 
+2547: depth=6 keyboardOptions = KeyboardOptions(keyboa
+2548: depth=6 modifier = Modifier.fillMaxWidth()
+2549: depth=6 )
+2551: depth=6 OutlinedTextField(
+2552: depth=6 value = editAllowances,
+2553: depth=6 onValueChange = { editAllowances = it },
+2554: depth=6 label = { Text("Allowances & HRA (₹)") }
+2555: depth=6 keyboardOptions = KeyboardOptions(keyboa
+2556: depth=6 modifier = Modifier.fillMaxWidth()
+2557: depth=6 )
+2559: depth=6 OutlinedTextField(
+2560: depth=6 value = editDeductions,
+2561: depth=6 onValueChange = { editDeductions = it },
+2562: depth=6 label = { Text("Standard Deductions (PF/
+2563: depth=6 keyboardOptions = KeyboardOptions(keyboa
+2564: depth=6 modifier = Modifier.fillMaxWidth()
+2565: depth=6 )
+2567: depth=6 // SMART ATTENDANCE-BASED DEDUCTIONS
+2568: depth=6 Column(
+2569: depth=6 modifier = Modifier
+2570: depth=6 .fillMaxWidth()
+2571: depth=6 .clip(RoundedCornerShape(8.dp))
+2572: depth=6 .background(MaterialTheme.colorScheme.er
+2573: depth=6 .padding(8.dp)
+2574: depth=7 ) {
+2575: depth=7 Text("Smart Attendance deductions", font
+2576: depth=7 Spacer(modifier = Modifier.height(4.dp))
+2577: depth=7 OutlinedTextField(
+2578: depth=7 value = editAbsentDays,
+2579: depth=7 onValueChange = { editAbsentDays = it },
+2580: depth=7 label = { Text("Absent Days (Unpaid Leav
+2581: depth=7 keyboardOptions = KeyboardOptions(keyboa
+2582: depth=7 modifier = Modifier.fillMaxWidth()
+2583: depth=7 )
+2584: depth=7 val basic = editBasicSalary.toDoubleOrNu
+2585: depth=7 val absDigits = editAbsentDays.toIntOrNu
+2586: depth=7 val calculatedLoss = (basic / 30.0) * ab
+2587: depth=8 if (calculatedLoss > 0) {
+2588: depth=8 Text(
+2589: depth=8 "Auto Deduction: - ₹${String.format("%.2
+2590: depth=8 fontSize = 11.sp,
+2591: depth=8 fontWeight = FontWeight.Bold,
+2592: depth=8 color = MaterialTheme.colorScheme.error,
+2593: depth=8 modifier = Modifier.padding(top = 4.dp)
+2594: depth=8 )
+2595: depth=7 }
+2596: depth=6 }
+2598: depth=6 // Status Dropdown
+2599: depth=6 Row(
+2600: depth=6 modifier = Modifier.fillMaxWidth(),
+2601: depth=6 horizontalArrangement = Arrangement.spac
+2602: depth=6 verticalAlignment = Alignment.CenterVert
+2603: depth=7 ) {
+2604: depth=7 Text("Payment Status:", fontWeight = Fon
+2605: depth=7 Button(
+2606: depth=7 onClick = { editStatus = "Paid" },
+2607: depth=7 colors = ButtonDefaults.buttonColors(con
+2608: depth=8 ) {
+2609: depth=8 Text("Paid")
+2610: depth=7 }
+2611: depth=7 Button(
+2612: depth=7 onClick = { editStatus = "Pending" },
+2613: depth=7 colors = ButtonDefaults.buttonColors(con
+2614: depth=8 ) {
+2615: depth=8 Text("Pending")
+2616: depth=7 }
+2617: depth=6 }
+2619: depth=6 OutlinedTextField(
+2620: depth=6 value = editRefDetails,
+2621: depth=6 onValueChange = { editRefDetails = it },
+2622: depth=6 label = { Text("Payment Ref / Channel") 
+2623: depth=6 modifier = Modifier.fillMaxWidth()
+2624: depth=6 )
+2626: depth=6 OutlinedTextField(
+2627: depth=6 value = editRemarks,
+2628: depth=6 onValueChange = { editRemarks = it },
+2629: depth=6 label = { Text("Remarks") },
+2630: depth=6 modifier = Modifier.fillMaxWidth()
+2631: depth=6 )
+2633: depth=6 // Dynamic Live Estimation Preview
+2634: depth=6 val basicVal = editBasicSalary.toDoubleO
+2635: depth=6 val bonusVal = editBonus.toDoubleOrNull(
+2636: depth=6 val allVal = editAllowances.toDoubleOrNu
+2637: depth=6 val dedVal = editDeductions.toDoubleOrNu
+2638: depth=6 val absDays = editAbsentDays.toIntOrNull
+2639: depth=6 val absDeduction = (basicVal / 30.0) * a
+2640: depth=6 val netVal = basicVal + bonusVal + allVa
+2642: depth=6 Card(
+2643: depth=6 modifier = Modifier.fillMaxWidth(),
+2644: depth=6 colors = CardDefaults.cardColors(contain
+2645: depth=7 ) {
+2646: depth=8 Column(modifier = Modifier.padding(10.dp
+2647: depth=8 Text("AUTO ESTIMATED NET PAYOUT", fontSi
+2648: depth=8 Text("₹${String.format("%.2f", netVal)}"
+2649: depth=7 }
+2650: depth=6 }
+2651: depth=5 }
+2652: depth=4 },
+2653: depth=5 confirmButton = {
+2654: depth=5 Button(
+2655: depth=6 onClick = {
+2656: depth=6 val basicVal = editBasicSalary.toDoubleO
+2657: depth=6 val bonusVal = editBonus.toDoubleOrNull(
+2658: depth=6 val allVal = editAllowances.toDoubleOrNu
+2659: depth=6 val dedVal = editDeductions.toDoubleOrNu
+2660: depth=6 val absDays = editAbsentDays.toIntOrNull
+2661: depth=6 val absDeduction = (basicVal / 30.0) * a
+2662: depth=6 val netVal = basicVal + bonusVal + allVa
+2664: depth=6 val finalPayroll = Payroll(
+2665: depth=6 payrollId = "${teacherId}_$selectedMonth
+2666: depth=6 teacherId = teacherId,
+2667: depth=6 month = selectedMonthLedger,
+2668: depth=6 basicSalary = basicVal,
+2669: depth=6 bonus = bonusVal,
+2670: depth=6 allowances = allVal,
+2671: depth=6 deductions = dedVal + absDeduction,
+2672: depth=6 netSalary = netVal,
+2673: depth=6 status = editStatus,
+2674: depth=6 paymentDetails = editRefDetails,
+2675: depth=6 remarks = editRemarks,
+2676: depth=6 lastUpdated = "2026-05-26"
+2677: depth=6 )
+2678: depth=6 viewModel.addOrUpdatePayroll(finalPayrol
+2679: depth=6 showSalaryEditDialog = false
+2680: depth=6 Toast.makeText(context, "$selectedMonthL
+2681: depth=5 }
+2682: depth=6 ) {
+2683: depth=6 Text("Release Ledger")
+2684: depth=5 }
+2685: depth=4 },
+2686: depth=5 dismissButton = {
+2687: depth=6 TextButton(onClick = { showSalaryEditDia
+2688: depth=6 Text("Cancel")
+2689: depth=5 }
+2690: depth=4 }
+2691: depth=4 )
+2692: depth=3 }
+2694: depth=3 // Printable Receipt Slip Template Dialo
+2695: depth=4 if (showReceiptSlipDialog) {
+2696: depth=4 AlertDialog(
+2697: depth=4 onDismissRequest = { showReceiptSlipDial
+2698: depth=5 title = {
+2699: depth=6 Row(modifier = Modifier.fillMaxWidth(), 
+2700: depth=6 Text("Print Salary Receipt Slip", style 
+2701: depth=7 IconButton(onClick = { showReceiptSlipDi
+2702: depth=7 Icon(Icons.Filled.Close, "Close slip")
+2703: depth=6 }
+2704: depth=5 }
+2705: depth=4 },
+2706: depth=5 text = {
+2707: depth=5 Card(
+2708: depth=5 modifier = Modifier
+2709: depth=5 .fillMaxWidth()
+2710: depth=5 .border(BorderStroke(2.dp, Color.Black),
+2711: depth=5 colors = CardDefaults.cardColors(contain
+2712: depth=5 shape = RoundedCornerShape(4.dp)
+2713: depth=6 ) {
+2714: depth=6 Column(
+2715: depth=6 modifier = Modifier
+2716: depth=6 .padding(16.dp)
+2717: depth=6 .verticalScroll(rememberScrollState()),
+2718: depth=6 horizontalAlignment = Alignment.CenterHo
+2719: depth=7 ) {
+2720: depth=7 // Simulated Letterhead
+2721: depth=7 Text("SD ADARSH SENIOR SECONDARY SCHOOL"
+2722: depth=7 Text("Affiliated to CBSE, Session 2026-2
+2723: depth=7 Text("Main Campus, New Delhi, India", fo
+2725: depth=7 Divider(color = Color.Black, modifier = 
+2727: depth=7 Text("MONTHLY SALARY DISBURSEMENT RECEIP
+2728: depth=7 Spacer(modifier = Modifier.height(10.dp)
+2730: depth=7 // Employee Metadata Grid
+2731: depth=7 Column(
+2732: depth=7 modifier = Modifier.fillMaxWidth(),
+2733: depth=7 verticalArrangement = Arrangement.spaced
+2734: depth=8 ) {
+2735: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2736: depth=9 Text("Employee Name:", fontSize = 11.sp,
+2737: depth=9 Text(teacherObj.name, fontSize = 11.sp, 
+2738: depth=8 }
+2739: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2740: depth=9 Text("Staff ID:", fontSize = 11.sp, font
+2741: depth=9 Text(teacherObj.teacherId, fontSize = 11
+2742: depth=8 }
+2743: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2744: depth=9 Text("Designation Role:", fontSize = 11.
+2745: depth=9 Text(teacherObj.role.ifBlank { "Instruct
+2746: depth=8 }
+2747: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2748: depth=9 Text("Payment Ledger Month:", fontSize =
+2749: depth=9 Text(selectedMonthLedger, fontSize = 11.
+2750: depth=8 }
+2751: depth=7 }
+2753: depth=7 Divider(color = Color.LightGray, modifie
+2755: depth=7 // Ledger Breakdown Sheet Layout
+2756: depth=7 Column(
+2757: depth=7 modifier = Modifier.fillMaxWidth(),
+2758: depth=7 verticalArrangement = Arrangement.spaced
+2759: depth=8 ) {
+2760: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2761: depth=9 Text("Basic Monthly Base Salary:", fontS
+2762: depth=9 Text("₹${activePayroll.basicSalary}", fo
+2763: depth=8 }
+2764: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2765: depth=9 Text("Performance Bonus released:", font
+2766: depth=9 Text("₹${activePayroll.bonus}", fontSize
+2767: depth=8 }
+2768: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2769: depth=9 Text("HRA & General Allowances:", fontSi
+2770: depth=9 Text("₹${activePayroll.allowances}", fon
+2771: depth=8 }
+2772: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2773: depth=9 Text("Taxes & PF Deductions (Smart):", f
+2774: depth=9 Text("- ₹${activePayroll.deductions}", f
+2775: depth=8 }
+2777: depth=8 Divider(color = Color.Black, modifier = 
+2779: depth=9 Row(modifier = Modifier.fillMaxWidth(), 
+2780: depth=9 Text("CREDITED NET PAYOUT IN-HAND:", fon
+2781: depth=9 Text("₹${activePayroll.netSalary}", font
+2782: depth=8 }
+2783: depth=7 }
+2785: depth=7 Spacer(modifier = Modifier.height(20.dp)
+2787: depth=7 // Signature Seal Layout
+2788: depth=7 Row(
+2789: depth=7 modifier = Modifier.fillMaxWidth(),
+2790: depth=7 horizontalArrangement = Arrangement.Spac
+2791: depth=7 verticalAlignment = Alignment.Bottom
+2792: depth=8 ) {
+2793: depth=9 Column(horizontalAlignment = Alignment.C
+2794: depth=9 Box(
+2795: depth=9 modifier = Modifier
+2796: depth=9 .size(40.dp)
+2797: depth=9 .border(BorderStroke(1.dp, Color.LightGr
+2798: depth=9 .padding(4.dp),
+2799: depth=9 contentAlignment = Alignment.Center
+2800: depth=10 ) {
+2801: depth=10 Text("SEAL", fontSize = 10.sp, fontWeigh
+2802: depth=9 }
+2803: depth=9 Spacer(modifier = Modifier.height(4.dp))
+2804: depth=9 Text("Authorized Stamp", fontSize = 9.sp
+2805: depth=8 }
+2806: depth=9 Column(horizontalAlignment = Alignment.C
+2807: depth=9 Text("Principal Accounts Dept", fontSize
+2808: depth=9 Divider(color = Color.Black, modifier = 
+2809: depth=9 Spacer(modifier = Modifier.height(4.dp))
+2810: depth=9 Text("Signed Signatory Official", fontSi
+2811: depth=8 }
+2812: depth=7 }
+2814: depth=7 Spacer(modifier = Modifier.height(14.dp)
+2815: depth=7 Text("N.B: Computer generated slip does 
+2816: depth=6 }
+2817: depth=5 }
+2818: depth=4 },
+2819: depth=5 confirmButton = {
+2820: depth=5 Button(
+2821: depth=6 onClick = {
+2822: depth=6 Toast.makeText(context, "Salary Receipt 
+2823: depth=6 showReceiptSlipDialog = false
+2824: depth=5 }
+2825: depth=6 ) {
+2826: depth=6 Icon(Icons.Filled.Download, null)
+2827: depth=6 Spacer(modifier = Modifier.width(6.dp))
+2828: depth=6 Text("Export receipt")
+2829: depth=5 }
+2830: depth=4 }
+2831: depth=4 )
+2832: depth=3 }
+2833: depth=2 }
+2835: depth=2 // Command management actions card
+2836: depth=3 if (isPrincipal) {
+2837: depth=3 ElevatedCard(
+2838: depth=3 modifier = Modifier.fillMaxWidth(),
+2839: depth=3 shape = RoundedCornerShape(16.dp),
+2840: depth=3 colors = CardDefaults.elevatedCardColors
+2841: depth=4 ) {
+2842: depth=5 Column(modifier = Modifier.padding(16.dp
+2843: depth=5 Text("Administrative Powers", style = Ma
+2845: depth=5 // Replace & Promote blue button
+2846: depth=5 Button(
+2847: depth=6 onClick = {
+2848: depth=6 selectedNewClassForChange = teacherObj.c
+2849: depth=6 showClassChangeDialog = true
+2850: depth=5 },
+2851: depth=5 colors = ButtonDefaults.buttonColors(con
+2852: depth=5 modifier = Modifier
+2853: depth=5 .fillMaxWidth()
+2854: depth=5 .height(48.dp)
+2855: depth=5 .testTag("promote_or_change_class_btn"),
+2856: depth=5 shape = RoundedCornerShape(10.dp)
+2857: depth=6 ) {
+2858: depth=6 Icon(Icons.Filled.SwapHoriz, "Class modi
+2859: depth=6 Spacer(modifier = Modifier.width(6.dp))
+2860: depth=6 Text("क्लास बदलें / प्रमोट करें (Modify 
+2861: depth=5 }
+2863: depth=5 // Fail-safe permanent account deletion 
+2864: depth=5 Button(
+2865: depth=5 onClick = { showDeleteConfirmationDialog
+2866: depth=5 colors = ButtonDefaults.buttonColors(con
+2867: depth=5 modifier = Modifier
+2868: depth=5 .fillMaxWidth()
+2869: depth=5 .height(48.dp)
+2870: depth=5 .testTag("delete_teacher_perm_btn"),
+2871: depth=5 shape = RoundedCornerShape(10.dp)
+2872: depth=6 ) {
+2873: depth=6 Icon(Icons.Filled.DeleteForever, "Remove
+2874: depth=6 Spacer(modifier = Modifier.width(6.dp))
+2875: depth=6 Text("अकाउंट हमेशा के लिए डिलीट करें", f
+2876: depth=5 }
+2877: depth=4 }
+2878: depth=3 }
+2879: depth=2 }
+2881: depth=2 // Sub-dialogs inside detail profile
+2882: depth=3 if (showClassChangeDialog) {
+2883: depth=3 val classOptions = listOf(
+2884: depth=3 "Nursery", "LKG", "UKG",
+2885: depth=3 "Class 1", "Class 2", "Class 3", "Class 
+2886: depth=3 "Class 6", "Class 7", "Class 8", "Class 
+2887: depth=3 )
+2888: depth=3 var expandedClassDropdown by remember { 
+2890: depth=3 AlertDialog(
+2891: depth=3 onDismissRequest = { showClassChangeDial
+2892: depth=3 title = { Text("क्लास बदलें / प्रमोट करे
+2893: depth=4 text = {
+2894: depth=5 Column(verticalArrangement = Arrangement
+2895: depth=5 Text("शिक्षक \"${teacherObj.name}\" के ल
+2897: depth=6 Box(modifier = Modifier.fillMaxWidth()) 
+2898: depth=6 OutlinedButton(
+2899: depth=6 onClick = { expandedClassDropdown = true
+2900: depth=6 modifier = Modifier.fillMaxWidth()
+2901: depth=7 ) {
+2902: depth=7 Text(selectedNewClassForChange.ifEmpty {
+2903: depth=7 Spacer(modifier = Modifier.width(4.dp))
+2904: depth=7 Icon(Icons.Filled.ArrowDropDown, null)
+2905: depth=6 }
+2906: depth=6 DropdownMenu(
+2907: depth=6 expanded = expandedClassDropdown,
+2908: depth=6 onDismissRequest = { expandedClassDropdo
+2909: depth=6 modifier = Modifier.fillMaxWidth(0.8f)
+2910: depth=7 ) {
+2911: depth=8 classOptions.forEach { cl ->
+2912: depth=8 DropdownMenuItem(
+2913: depth=8 text = { Text(cl) },
+2914: depth=9 onClick = {
+2915: depth=9 selectedNewClassForChange = cl
+2916: depth=9 expandedClassDropdown = false
+2917: depth=8 }
+2918: depth=8 )
+2919: depth=7 }
+2920: depth=6 }
+2921: depth=5 }
+2923: depth=5 HorizontalDivider(
+2924: depth=5 modifier = Modifier.padding(vertical = 1
+2925: depth=5 color = MaterialTheme.colorScheme.outlin
+2926: depth=5 )
+2928: depth=6 if (isPrincipal && teacherObj.role != "P
+2929: depth=6 Text(
+2930: depth=6 text = "स्कूल टीम एडमिन प्रभार (Administ
+2931: depth=6 style = MaterialTheme.typography.titleSm
+2932: depth=6 color = MaterialTheme.colorScheme.primar
+2933: depth=6 )
+2935: depth=6 // Premium Golden Button for Admin Promo
+2936: depth=6 Button(
+2937: depth=7 onClick = {
+2938: depth=8 viewModel.promoteToAdmin(teacherObj.teac
+2939: depth=9 if (success) {
+2940: depth=9 Toast.makeText(context, "शिक्षक को सफलता
+2941: depth=9 selectedTeacherForProfile = teacherObj.c
+2942: depth=9 showClassChangeDialog = false
+2943: depth=9 } else {
+2944: depth=9 Toast.makeText(context, "प्रचार असफल रहा
+2945: depth=8 }
+2946: depth=7 }
+2947: depth=6 },
+2948: depth=6 colors = ButtonDefaults.buttonColors(
+2949: depth=6 containerColor = Color(0xFF1E3A8A), // D
+2950: depth=6 contentColor = Color(0xFFFFD700) // Gold
+2951: depth=6 ),
+2952: depth=6 border = BorderStroke(1.5.dp, Brush.hori
+2953: depth=6 shape = RoundedCornerShape(10.dp),
+2954: depth=6 modifier = Modifier
+2955: depth=6 .fillMaxWidth()
+2956: depth=6 .height(50.dp)
+2957: depth=6 .testTag("promote_to_school_admin_btn")
+2958: depth=7 ) {
+2959: depth=7 Icon(Icons.Filled.Stars, contentDescript
+2960: depth=7 Spacer(modifier = Modifier.width(8.dp))
+2961: depth=7 Text(
+2962: depth=7 text = "प्रमोट एडमिन / Make Admin of thi
+2963: depth=7 style = MaterialTheme.typography.labelMe
+2964: depth=7 )
+2965: depth=6 }
+2966: depth=5 }
+2967: depth=4 }
+2968: depth=3 },
+2969: depth=4 confirmButton = {
+2970: depth=4 Button(
+2971: depth=5 onClick = {
+2972: depth=5 showClassChangeDialog = false
+2973: depth=6 if (selectedNewClassForChange != teacher
+2974: depth=6 showTakeoverTeacherPrompt = true
+2975: depth=6 } else {
+2976: depth=6 Toast.makeText(context, "क्लास समान है, 
+2977: depth=5 }
+2978: depth=4 }
+2979: depth=5 ) {
+2980: depth=5 Text("आगे बढ़ें (Next)")
+2981: depth=4 }
+2982: depth=3 },
+2983: depth=4 dismissButton = {
+2984: depth=4 TextButton(onClick = { showClassChangeDi
+2985: depth=3 }
+2986: depth=3 )
+2987: depth=2 }
+2989: depth=3 if (showTakeoverTeacherPrompt) {
+2990: depth=3 val potentialTakeoverTeachers = teachers
+2991: depth=3 var expandedTakeoverMenu by remember { m
+2993: depth=3 AlertDialog(
+2994: depth=3 onDismissRequest = { showTakeoverTeacher
+2995: depth=3 title = { Text("कक्षा प्रभार हस्तांतरण (
+2996: depth=4 text = {
+2997: depth=5 Column(verticalArrangement = Arrangement
+2998: depth=5 Text(
+2999: depth=5 text = "इस पुरानी क्लास \"${teacherObj.c
+3000: depth=5 style = MaterialTheme.typography.bodyMed
+3001: depth=5 fontWeight = FontWeight.Bold,
+3002: depth=5 color = MaterialTheme.colorScheme.primar
+3003: depth=5 )
+3005: depth=6 Box(modifier = Modifier.fillMaxWidth()) 
+3006: depth=6 OutlinedButton(
+3007: depth=6 onClick = { expandedTakeoverMenu = true 
+3008: depth=6 modifier = Modifier.fillMaxWidth()
+3009: depth=7 ) {
+3010: depth=7 Text(selectedTakeoverTeacher?.name ?: "ल
+3011: depth=7 Spacer(modifier = Modifier.width(4.dp))
+3012: depth=7 Icon(Icons.Filled.ArrowDropDown, null)
+3013: depth=6 }
+3014: depth=6 DropdownMenu(
+3015: depth=6 expanded = expandedTakeoverMenu,
+3016: depth=6 onDismissRequest = { expandedTakeoverMen
+3017: depth=6 modifier = Modifier.fillMaxWidth(0.8f)
+3018: depth=7 ) {
+3019: depth=8 potentialTakeoverTeachers.forEach { take
+3020: depth=8 DropdownMenuItem(
+3021: depth=8 text = { Text("${takeoverStaff.name} (As
+3022: depth=9 onClick = {
+3023: depth=9 selectedTakeoverTeacher = takeoverStaff
+3024: depth=9 expandedTakeoverMenu = false
+3025: depth=8 }
+3026: depth=8 )
+3027: depth=7 }
+3028: depth=6 }
+3029: depth=5 }
+3031: depth=5 Text(
+3032: depth=5 text = "ध्यान दें: प्रभार हस्तांतरित करन
+3033: depth=5 fontSize = 11.sp,
+3034: depth=5 color = Color.Gray
+3035: depth=5 )
+3036: depth=4 }
+3037: depth=3 },
+3038: depth=4 confirmButton = {
+3039: depth=4 Button(
+3040: depth=5 onClick = {
+3041: depth=6 if (selectedTakeoverTeacher == null) {
+3042: depth=6 Toast.makeText(context, "कृपया टेकओवर शि
+3043: depth=6 return@Button
+3044: depth=5 }
+3045: depth=5 val oldClass = teacherObj.classesAssigne
+3046: depth=5 val newClass = selectedNewClassForChange
+3047: depth=5 val takeoverStaff = selectedTakeoverTeac
+3049: depth=5 // Update current teacher classes
+3050: depth=5 val currentTeacherUpdated = teacherObj.c
+3051: depth=5 viewModel.addOrUpdateTeacher(currentTeac
+3052: depth=5 val curTeacherUser = users.find { it.use
+3053: depth=6 if (curTeacherUser != null) {
+3054: depth=6 viewModel.addUser(curTeacherUser.copy(cl
+3055: depth=5 }
+3057: depth=5 // Update takeover teacher classes to ol
+3058: depth=5 val takeoverTeacherUpdated = takeoverSta
+3059: depth=5 viewModel.addOrUpdateTeacher(takeoverTea
+3060: depth=5 val takeoverUser = users.find { it.userI
+3061: depth=6 if (takeoverUser != null) {
+3062: depth=6 viewModel.addUser(takeoverUser.copy(clas
+3063: depth=5 }
+3065: depth=5 selectedTeacherForProfile = currentTeach
+3066: depth=5 showTakeoverTeacherPrompt = false
+3067: depth=5 selectedTakeoverTeacher = null
+3068: depth=5 Toast.makeText(context, "वर्ग प्रभार सफल
+3069: depth=4 }
+3070: depth=5 ) {
+3071: depth=5 Text("सत्यापित करें (Confirm Exchange)")
+3072: depth=4 }
+3073: depth=3 },
+3074: depth=4 dismissButton = {
+3075: depth=5 TextButton(onClick = {
+3076: depth=5 showTakeoverTeacherPrompt = false
+3077: depth=5 selectedTakeoverTeacher = null
+3078: depth=4 }) { Text("रद्द करें") }
+3079: depth=3 }
+3080: depth=3 )
+3081: depth=2 }
+3083: depth=3 if (showDeleteConfirmationDialog) {
+3084: depth=3 AlertDialog(
+3085: depth=3 onDismissRequest = { showDeleteConfirmat
+3086: depth=3 title = { Text("अकाउंट हटाना (Security P
+3087: depth=4 text = {
+3088: depth=4 Text(
+3089: depth=4 text = "खाता हमेशा के लिए हटाएं? क्या आप
+3090: depth=4 style = MaterialTheme.typography.bodyMed
+3091: depth=4 )
+3092: depth=3 },
+3093: depth=4 confirmButton = {
+3094: depth=4 Button(
+3095: depth=5 onClick = {
+3096: depth=5 val idToDelete = teacherObj.teacherId
+3097: depth=5 val currentUserId = viewModel.currentUse
+3098: depth=5 val currentUserName = viewModel.currentU
+3099: depth=5 val currentUserRole = viewModel.currentU
+3101: depth=6 if (currentUserRole == "PRINCIPAL") {
+3102: depth=6 viewModel.deleteUserAccount(idToDelete)
+3103: depth=6 viewModel.deleteTeacher(idToDelete)
+3104: depth=6 selectedTeacherForProfile = null
+3105: depth=6 showDeleteConfirmationDialog = false
+3106: depth=6 Toast.makeText(context, "Teacher deleted
+3107: depth=6 } else if (currentUserRole == "ADMIN" ||
+3108: depth=6 viewModel.requestDeletion(
+3109: depth=6 targetId = idToDelete,
+3110: depth=6 targetType = "TEACHER",
+3111: depth=6 targetName = teacherObj.name,
+3112: depth=6 requesterName = currentUserName,
+3113: depth=6 requesterId = currentUserId
+3114: depth=6 )
+3115: depth=6 showDeleteConfirmationDialog = false
+3116: depth=6 Toast.makeText(context, "Deletion reques
+3117: depth=5 }
+3118: depth=4 },
+3119: depth=4 colors = ButtonDefaults.buttonColors(con
+3120: depth=5 ) {
+3121: depth=5 Text("हां, परमानेंट डिलीट करें")
+3122: depth=4 }
+3123: depth=3 },
+3124: depth=4 dismissButton = {
+3125: depth=4 TextButton(onClick = { showDeleteConfirm
+3126: depth=3 }
+3127: depth=3 )
+3128: depth=2 }

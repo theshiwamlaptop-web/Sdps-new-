@@ -1,0 +1,291 @@
+fun FeesManagementScreen(
+    viewModel: SchoolViewModel,
+    onOpenFeeLedger: (Student) -> Unit = {}
+) {
+    val feesList by viewModel.feesState.collectAsState()
+    val students by viewModel.studentsState.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
+
+    val isStudent = currentUser?.role == "STUDENT"
+    val myStudentId = currentUser?.userId ?: "S101"
+    val myStudent = students.find { it.studentId == myStudentId }
+    
+    // We maintain activeStudentState for our double-stage fee navigation flow
+    var activeStudentForLedger by remember { mutableStateOf<Student?>(null) }
+    
+    // Auto-lock STUDENT roles to their personalized profile immediately
+    LaunchedEffect(isStudent, myStudent, students) {
+        if (isStudent && myStudent != null && activeStudentForLedger == null) {
+            activeStudentForLedger = myStudent
+        }
+    }
+
+    if (activeStudentForLedger != null) {
+        // STAGE 2: PREMIUM ERP STUDENT FEE LEDGER PORTAL
+        StudentLedgerDetailView(
+            viewModel = viewModel,
+            student = activeStudentForLedger!!,
+            isFromDialog = false,
+            onBackClick = {
+                if (!isStudent) {
+                    activeStudentForLedger = null
+                }
+            }
+        )
+    } else {
+        // STAGE 1: CLASS SELECTION & STUDENT LIST SCREEN
+        var selectedClassFilter by remember { mutableStateOf("All Classes") }
+        var searchQuery by remember { mutableStateOf("") }
+        val context = LocalContext.current
+        
+        // Dynamic class extraction from database
+        val classes = remember(students) {
+            val dynamicClasses = students.map { it.className }.distinct().filter { it.isNotEmpty() }.sorted()
+            listOf("All Classes") + dynamicClasses
+        }
+
+        // Search algorithm for instant filtering
+        val filteredStudentsByClassAndSearch = remember(students, selectedClassFilter, searchQuery) {
+            students.filter { student ->
+                val matchesClass = selectedClassFilter == "All Classes" || 
+                    student.className.equals(selectedClassFilter, ignoreCase = true)
+                val matchesSearch = searchQuery.isBlank() || 
+                    student.name.contains(searchQuery, ignoreCase = true) || 
+                    student.studentId.contains(searchQuery, ignoreCase = true) || 
+                    student.admissionNo.contains(searchQuery, ignoreCase = true)
+                matchesClass && matchesSearch
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // MODULE BAR: Material 3 Header & synchronization badge
+            Surface(
+                tonalElevation = 2.dp,
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "S.D. Public School - Fees",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Enterprise Finance & Revenue Module",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (currentUser?.role != "STUDENT" && currentUser?.role != "TEACHER" && currentUser?.role != "CLASS_TEACHER") {
+                                Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(onClick = { Toast.makeText(context, "Exporting Due Students List to Excel...", Toast.LENGTH_SHORT).show() }, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) { Text("Export Excel", fontSize = 11.sp) }
+                                    Button(onClick = { Toast.makeText(context, "Exporting Monthly Revenue Report to PDF...", Toast.LENGTH_SHORT).show() }, modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))) { Text("Export PDF", fontSize = 11.sp) }
+                                }
+                            }
+                        }
+                        
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(Color(0xFFDCFCE7))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF166534))
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "ONLINE SYNC",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF166534)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // CLASS SELECTOR (Horizontal Row)
+            Text(
+                text = "Select Academic Class Filter",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(classes) { cl ->
+                    val isSelected = selectedClassFilter == cl
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedClassFilter = cl },
+                        label = { Text(cl) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            }
+
+            // INSTANT SEARCH BAR
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .testTag("student_fees_search"),
+                placeholder = { Text("Search by student name or admission ID...") },
+                leadingIcon = { Icon(Icons.Filled.Search, "Search Icon") },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Filled.Clear, "Clear Icon")
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                )
+            )
+
+            // STUDENT LIST (Vertical LazyColumn)
+            Text(
+                text = "Registered Scholars Directory (${filteredStudentsByClassAndSearch.size})",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (filteredStudentsByClassAndSearch.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No matching students found.", style = MaterialTheme.typography.bodyLarge)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp)
+                        .testTag("school_fees_student_list"),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    items(filteredStudentsByClassAndSearch) { student ->
+                        val fee = feesList.find { it.studentId == student.studentId }
+                        val hasFee = fee != null
+                        val dues = fee?.dueAmount ?: 0.0
+                        val isPaid = hasFee && dues <= 0.0
+
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    activeStudentForLedger = student
+                                },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Avatar Photo / Profile Placeholder
+                                Box(
+                                    modifier = Modifier
+                                        .size(52.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    val initials = student.name.split(" ").mapNotNull { it.firstOrNull() }.take(2).joinToString("").uppercase()
+                                    Text(
+                                        text = initials.ifEmpty { "ST" },
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                // Student info
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = student.name,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    Text(
+                                        text = "Roll No: ${student.rollNo} | Adm No: ${student.admissionNo}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(top = 4.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = if (student.className.uppercase().contains("CLASS")) student.className.uppercase() else "CLASS ${student.className.uppercase()}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                // Premium Trailing balance status badge
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (isPaid) Color(0xFFD1FAE5) else if (hasFee) Color(0xFFFEE2E2) else Color(0xFFE2E8F0)
+                                        )
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = if (isPaid) "Fully Paid" else if (hasFee) "Dues: ₹${"%,.0f".format(dues)}" else "No Record",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        color = if (isPaid) Color(0xFF065F46) else if (hasFee) Color(0xFF991B1B) else Color(0xFF475569)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==========================================
+// 7. HOMEWORK SYSTEM
+// ==========================================
+@Composable

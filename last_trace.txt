@@ -1,0 +1,144 @@
+736 [1]: confirmButton = {
+737 [1]: Button(
+738 [2]: onClick = {
+739 [2]: showDeleteConfirmDialog = false
+740 [2]: val idToDelete = selectedUser.userId
+741 [3]: viewModel.deleteUserAccount(idToDelete) { success ->
+742 [4]: if (success) {
+743 [4]: viewModel.logAudit("PRINCIPAL PERMANENT DELETION", "Deleted 
+744 [4]: Toast.makeText(context, "Account permanently removed from sy
+745 [4]: 
+747 [5]: if (idToDelete != user.userId) {
+748 [5]: selectedUser = user
+749 [4]: }
+750 [4]: } else {
+751 [4]: Toast.makeText(context, "Deletions failed. Please try again.
+752 [3]: }
+753 [2]: }
+754 [1]: }
+755 [1]: ,
+756 [1]: colors = ButtonDefaults.buttonColors(containerColor = Materi
+757 [1]: modifier = Modifier.testTag("dialog_confirm_delete_btn")
+758 [2]: ) {
+759 [2]: Text("YES (Delete)", fontWeight = FontWeight.ExtraBold, colo
+760 [1]: }
+761 [0]: },
+762 [1]: dismissButton = {
+763 [1]: TextButton(
+764 [1]: onClick = { showDeleteConfirmDialog = false },
+765 [1]: modifier = Modifier.testTag("dialog_dismiss_delete_btn")
+766 [2]: ) {
+767 [2]: Text("NO (Cancel)", fontWeight = FontWeight.Bold, color = Ma
+768 [1]: }
+769 [0]: }
+770 [0]: )
+771 [-1]: }
+772 [0]: if (showPasswordDialog) {
+773 [0]: AlertDialog(
+774 [0]: onDismissRequest = { showPasswordDialog = false },
+775 [0]: title = { Text("Update Security Password", fontWeight = Font
+776 [1]: text = {
+777 [2]: Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+778 [2]: Text(
+779 [2]: text = "Customize your security password. For security, your
+780 [2]: fontSize = 12.sp,
+781 [2]: color = Color.Gray
+782 [2]: )
+783 [2]: OutlinedTextField(
+784 [2]: value = currentPasswordInput,
+785 [2]: onValueChange = { currentPasswordInput = it },
+786 [2]: label = { Text("Current Password") },
+787 [2]: visualTransformation = PasswordVisualTransformation(),
+788 [2]: singleLine = true,
+789 [2]: modifier = Modifier
+790 [2]: .fillMaxWidth()
+791 [2]: .testTag("settings_current_password_input")
+792 [2]: )
+793 [2]: OutlinedTextField(
+794 [2]: value = newPasswordInput,
+795 [2]: onValueChange = { newPasswordInput = it },
+796 [2]: label = { Text("New Password") },
+797 [2]: visualTransformation = PasswordVisualTransformation(),
+798 [2]: singleLine = true,
+799 [2]: modifier = Modifier
+800 [2]: .fillMaxWidth()
+801 [2]: .testTag("settings_new_password_input")
+802 [2]: )
+803 [2]: OutlinedTextField(
+804 [2]: value = confirmPasswordInput,
+805 [2]: onValueChange = { confirmPasswordInput = it },
+806 [2]: label = { Text("Confirm New Password") },
+807 [2]: visualTransformation = PasswordVisualTransformation(),
+808 [2]: singleLine = true,
+809 [2]: modifier = Modifier
+810 [2]: .fillMaxWidth()
+811 [2]: .testTag("settings_confirm_password_input")
+812 [2]: )
+813 [1]: }
+814 [0]: },
+815 [1]: confirmButton = {
+816 [1]: Button(
+817 [2]: onClick = {
+818 [2]: val trimmedCurrent = currentPasswordInput.trim()
+819 [2]: val trimmedNew = newPasswordInput.trim()
+820 [2]: val trimmedConfirm = confirmPasswordInput.trim()
+821 [2]: 
+822 [2]: val currentHashed = viewModel.sha256Hex(trimmedCurrent)
+823 [2]: val isCurrentValid = (user.passwordHash.isEmpty()) ||
+824 [2]: (user.passwordHash == trimmedCurrent) ||
+825 [2]: (user.passwordHash == currentHashed) ||
+826 [2]: (user.passwordHash == viewModel.sha256Hex("temp123") && trim
+827 [2]: (user.passwordHash == "temp123" && trimmedCurrent == "temp12
+828 [2]: 
+829 [3]: if (trimmedCurrent.isEmpty() || trimmedNew.isEmpty() || trim
+830 [3]: Toast.makeText(context, "All password fields are mandatory!"
+831 [3]: } else if (!isCurrentValid) {
+832 [3]: Toast.makeText(context, "Current Password code is incorrect!
+833 [3]: } else if (trimmedNew.length < 6) {
+834 [3]: Toast.makeText(context, "New password must be at least 6 cha
+835 [3]: } else if (trimmedNew != trimmedConfirm) {
+836 [3]: Toast.makeText(context, "New passwords do not match!", Toast
+837 [2]: }
+838 [3]: else {
+839 [3]: viewModel.changePassword(
+840 [3]: user.userId,
+841 [3]: trimmedNew,
+842 [4]: onSuccess = {
+843 [4]: viewModel.logAudit("Updated Security Password", "encrypted",
+844 [4]: showPasswordDialog = false
+845 [4]: currentPasswordInput = ""
+846 [4]: newPasswordInput = ""
+847 [4]: confirmPasswordInput = ""
+848 [4]: Toast.makeText(context, "Password updated successfully!", To
+849 [3]: }
+850 [3]: ,
+851 [4]: onFailure = {
+852 [4]: Toast.makeText(context, "Failed to update: $it", Toast.LENGT
+853 [3]: }
+854 [3]: )
+855 [2]: }
+856 [1]: },
+857 [1]: modifier = Modifier.testTag(\"submit_change_password\")
+858 [2]: ) {
+859 [2]: Text("Change")
+860 [1]: }
+861 [1]: ,
+862 [2]: dismissButton = {
+863 [2]: TextButton(
+864 [3]: onClick = {
+865 [3]: showPasswordDialog = false
+866 [3]: currentPasswordInput = ""
+867 [3]: newPasswordInput = ""
+868 [3]: confirmPasswordInput = ""
+869 [2]: }
+870 [3]: ) {
+871 [3]: Text("Cancel")
+872 [2]: }
+873 [1]: }
+874 [1]: )
+875 [1]: 
+876 [1]: 
+877 [1]: 
+878 [1]: @Composable
+879 [1]: fun NotificationToggleItem(
+880 [1]: title: String,

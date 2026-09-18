@@ -1,0 +1,572 @@
+930 [1]: fun PrincipalERPPanel(viewModel: SchoolViewModel, principal:
+931 [1]: val context = LocalContext.current
+932 [1]: val users by viewModel.usersState.collectAsState()
+933 [1]: val teachers by viewModel.teachersState.collectAsState()
+934 [1]: val auditLogs by viewModel.auditLogsState.collectAsState()
+935 [1]: val notices by viewModel.noticesState.collectAsState()
+936 [1]: 
+937 [1]: var subSectionTab by remember { mutableStateOf(0) } // 0: Us
+938 [1]: 
+940 [1]: var schoolName by remember { mutableStateOf("S. D Public Sch
+941 [1]: var clockInThreshold by remember { mutableStateOf("08:30 AM"
+942 [1]: 
+943 [1]: val feeConfig by viewModel.feeConfig.collectAsState()
+944 [1]: var baseAdmission by remember(feeConfig) { mutableStateOf(fe
+945 [1]: var monthlyTuition by remember(feeConfig) { mutableStateOf(f
+946 [1]: var sportsFund by remember(feeConfig) { mutableStateOf(feeCo
+947 [1]: var examFee by remember(feeConfig) { mutableStateOf(feeConfi
+948 [1]: var transport0to5 by remember(feeConfig) { mutableStateOf(fe
+949 [1]: var transport5to10 by remember(feeConfig) { mutableStateOf(f
+950 [1]: var transport10to15 by remember(feeConfig) { mutableStateOf(
+951 [1]: 
+953 [1]: var showAssignTeacherDialog by remember { mutableStateOf(fal
+954 [1]: var selectedTeacherForClassAssign by remember { mutableState
+955 [1]: var classesTextForAssign by remember { mutableStateOf("") }
+956 [1]: var subjectTextForAssign by remember { mutableStateOf("") }
+957 [1]: 
+958 [2]: Column(modifier = Modifier.fillMaxSize()) {
+959 [2]: SecondaryTabRow(
+960 [2]: selectedTabIndex = subSectionTab,
+961 [2]: containerColor = MaterialTheme.colorScheme.primaryContainer.
+962 [3]: ) {
+963 [4]: listOf("Security Roles", "Classes Assign", "School Setup", "
+964 [4]: Tab(
+965 [4]: selected = subSectionTab == idx,
+966 [4]: onClick = { subSectionTab = idx },
+967 [4]: text = { Text(label, fontSize = 11.sp, fontWeight = FontWeig
+968 [4]: )
+969 [3]: }
+970 [2]: }
+971 [2]: 
+972 [2]: Box(
+973 [2]: modifier = Modifier
+974 [2]: .fillMaxSize()
+975 [2]: .weight(1f)
+976 [2]: .padding(16.dp)
+977 [3]: ) {
+978 [4]: when (subSectionTab) {
+979 [5]: 0 -> { // SECURITY ROLES SECURITY MANAGEMENT SYSTEM
+980 [6]: Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+981 [7]: Row(modifier = Modifier.fillMaxWidth(), horizontalArrangemen
+982 [7]: Text("Portal Access Directory", style = MaterialTheme.typogr
+983 [7]: Text("Count: ${users.size}", fontSize = 11.sp, color = Color
+984 [6]: }
+985 [6]: 
+986 [7]: LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp),
+987 [8]: items(users) { usr ->
+988 [8]: val isSelf = usr.userId == principal.userId
+989 [8]: ElevatedCard(
+990 [8]: modifier = Modifier.fillMaxWidth(),
+991 [8]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+992 [9]: ) {
+993 [9]: Row(
+994 [9]: modifier = Modifier.padding(12.dp),
+995 [9]: verticalAlignment = Alignment.CenterVertically,
+996 [9]: horizontalArrangement = Arrangement.SpaceBetween
+997 [10]: ) {
+998 [11]: Column(modifier = Modifier.weight(1f)) {
+999 [12]: Row(verticalAlignment = Alignment.CenterVertically) {
+1000 [12]: Text(usr.name.ifBlank { usr.email.substringBefore("@").ifBla
+1001 [13]: if (isSelf) {
+1002 [13]: Spacer(modifier = Modifier.width(4.dp))
+1003 [14]: Box(modifier = Modifier.background(Color(0xFFE0F2FE)).paddin
+1004 [14]: Text("SELF", fontSize = 8.sp, color = Color(0xFF0284C7), fon
+1005 [13]: }
+1006 [12]: }
+1007 [11]: }
+1008 [11]: Text("ID Code: ${usr.userId} | Email: ${usr.email}", fontSiz
+1009 [11]: Text("Auth Level: ${usr.role} (${usr.roleCode})", fontSize =
+1010 [10]: }
+1011 [10]: 
+1012 [11]: Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+1014 [11]: IconButton(
+1015 [12]: onClick = {
+1016 [12]: viewModel.changePassword(
+1017 [12]: usr.userId,
+1018 [12]: "temp123",
+1019 [13]: onSuccess = {
+1020 [13]: viewModel.logAudit(
+1021 [13]: "Reset Passcode credentials for ${usr.userId}",
+1022 [13]: usr.passwordHash,
+1023 [13]: "temp123"
+1024 [13]: )
+1025 [13]: Toast.makeText(context, "Password reset back to default 'tem
+1026 [12]: }
+1027 [12]: ,
+1028 [13]: onFailure = {
+1029 [13]: Toast.makeText(context, "Cannot reset: $it", Toast.LENGTH_SH
+1030 [12]: }
+1031 [12]: )
+1032 [11]: }
+1033 [11]: ,
+1034 [11]: modifier = Modifier.size(28.dp).testTag("reset_pwd_${usr.use
+1035 [12]: ) {
+1036 [12]: Icon(imageVector = Icons.Filled.LockReset, contentDescriptio
+1037 [11]: }
+1038 [11]: 
+1040 [12]: if (!isSelf) {
+1041 [12]: val rolesList = listOf("HEAD_ADMIN", "ADMIN", "TEACHER", "ST
+1042 [12]: IconButton(
+1043 [13]: onClick = {
+1044 [13]: val currentIndex = rolesList.indexOf(usr.role)
+1045 [13]: val nextIndex = (currentIndex + 1) % rolesList.size
+1046 [13]: val nextRole = rolesList[nextIndex]
+1047 [14]: val updatedRoleCode = when (nextRole) {
+1048 [14]: "HEAD_ADMIN" -> "HA-99"
+1049 [14]: "ADMIN" -> "AD-55"
+1050 [14]: "TEACHER" -> "TC-12"
+1051 [14]: else -> "ST-01"
+1052 [13]: }
+1053 [13]: val promotedUser = usr.copy(role = nextRole, roleCode = upda
+1054 [13]: viewModel.addUser(promotedUser)
+1055 [13]: viewModel.logAudit(
+1056 [13]: "Modified User Access Level",
+1057 [13]: "Role: ${usr.role}, Code: ${usr.roleCode}",
+1058 [13]: "Role: $nextRole, Code: $updatedRoleCode"
+1059 [13]: )
+1060 [13]: Toast.makeText(context, "Role level updated for ${usr.name} 
+1061 [12]: }
+1062 [12]: ,
+1063 [12]: modifier = Modifier.size(28.dp).testTag("toggle_role_${usr.u
+1064 [13]: ) {
+1065 [13]: Icon(imageVector = Icons.Filled.GroupWork, contentDescriptio
+1066 [12]: }
+1067 [11]: }
+1068 [10]: }
+1069 [9]: }
+1070 [8]: }
+1071 [7]: }
+1072 [6]: }
+1073 [6]: 
+1075 [6]: ElevatedCard(
+1076 [6]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+1077 [6]: modifier = Modifier.fillMaxWidth()
+1078 [7]: ) {
+1079 [8]: Column(modifier = Modifier.padding(14.dp), verticalArrangeme
+1080 [8]: Text("🔒 Enterprise Ownership Transfer", style = MaterialThem
+1081 [8]: Text("Instantly demote your principal level session and regi
+1082 [8]: 
+1083 [8]: var showTransferDialog by remember { mutableStateOf(false) }
+1084 [8]: var targetUserForTransfer by remember { mutableStateOf<User?
+1085 [8]: 
+1086 [8]: var dropdownExpanded by remember { mutableStateOf(false) }
+1087 [9]: Box {
+1088 [10]: OutlinedButton(onClick = { dropdownExpanded = true }, modifi
+1089 [10]: Text(targetUserForTransfer?.let { "${it.name} (${it.role})" 
+1090 [9]: }
+1091 [10]: DropdownMenu(expanded = dropdownExpanded, onDismissRequest =
+1092 [11]: users.filter { it.userId != principal.userId && it.role != "
+1093 [11]: DropdownMenuItem(
+1094 [11]: text = { Text("${otherUsr.name} (${otherUsr.role})") },
+1095 [12]: onClick = {
+1096 [12]: targetUserForTransfer = otherUsr
+1097 [12]: dropdownExpanded = false
+1098 [11]: }
+1099 [11]: )
+1100 [10]: }
+1101 [9]: }
+1102 [8]: }
+1103 [8]: 
+1104 [8]: Button(
+1105 [8]: onClick = { showTransferDialog = true },
+1106 [8]: colors = ButtonDefaults.buttonColors(containerColor = Materi
+1107 [8]: modifier = Modifier.fillMaxWidth().testTag("ownership_transf
+1108 [8]: enabled = targetUserForTransfer != null
+1109 [9]: ) {
+1110 [9]: Text("Transfer Principal Ownership Securely", fontWeight = F
+1111 [8]: }
+1112 [8]: 
+1113 [9]: if (showTransferDialog && targetUserForTransfer != null) {
+1114 [9]: AlertDialog(
+1115 [9]: onDismissRequest = { showTransferDialog = false },
+1116 [9]: title = { Text("WARN: CRYPTOGRAPHIC OWNER DEMOTION", fontWei
+1117 [9]: text = { Text("Are you absolutely sure you want to transfer 
+1118 [10]: confirmButton = {
+1119 [10]: Button(
+1120 [11]: onClick = {
+1121 [11]: showTransferDialog = false
+1122 [11]: val oldPrincipal = principal.copy(role = "ADMIN", roleCode =
+1123 [11]: val newPrincipal = targetUserForTransfer!!.copy(role = "PRIN
+1124 [11]: viewModel.addUser(oldPrincipal)
+1125 [11]: viewModel.addUser(newPrincipal)
+1126 [11]: viewModel.logAudit("OWNERSHIP TRANSFER COMPLETE", "Demoted s
+1127 [11]: Toast.makeText(context, "Ownership transferred! Demoting pri
+1128 [11]: targetUserForTransfer = null
+1129 [10]: }
+1130 [10]: ,
+1131 [10]: colors = ButtonDefaults.buttonColors(containerColor = Materi
+1132 [10]: modifier = Modifier.testTag("confirm_ownership_transfer_btn"
+1133 [11]: ) {
+1134 [11]: Text("YES, CONFIRM TRANSFER")
+1135 [10]: }
+1136 [9]: }
+1137 [9]: ,
+1138 [10]: dismissButton = {
+1139 [10]: TextButton(onClick = { showTransferDialog = false }) { Text(
+1140 [9]: }
+1141 [9]: )
+1142 [8]: }
+1143 [7]: }
+1144 [6]: }
+1145 [5]: }
+1146 [4]: }
+1147 [4]: 
+1148 [5]: 1 -> { // CLASSES COMPREHENSIVE ASSIGNMENT
+1149 [6]: Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+1150 [6]: Text("Class Teacher Assignments & Portfolios", style = Mater
+1151 [6]: Text("Principal can instantly assign classes and subjects to
+1152 [6]: 
+1154 [6]: ElevatedCard(
+1155 [6]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+1156 [6]: shape = RoundedCornerShape(12.dp)
+1157 [7]: ) {
+1158 [8]: Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+1159 [8]: Text("📡 Live Faculty Status Monitor", fontWeight = FontWeigh
+1160 [8]: Spacer(modifier = Modifier.height(4.dp))
+1161 [8]: Row(
+1162 [8]: modifier = Modifier.fillMaxWidth(),
+1163 [8]: horizontalArrangement = Arrangement.SpaceBetween
+1164 [9]: ) {
+1165 [9]: val totalFaculty = teachers.size
+1166 [9]: val assignedFaculty = teachers.filter { it.classesAssigned.i
+1167 [9]: 
+1168 [10]: Column {
+1169 [10]: Text("Total Educators: $totalFaculty", fontSize = 11.sp, fon
+1170 [10]: Text("Portfolio Assigned: $assignedFaculty", fontSize = 11.s
+1171 [9]: }
+1172 [10]: Column(horizontalAlignment = Alignment.End) {
+1173 [10]: Text("Duty Active Status: PRESENT", fontSize = 11.sp, color 
+1174 [10]: Text("Daily Logs Tracked: $totalFaculty Archives", fontSize 
+1175 [9]: }
+1176 [8]: }
+1177 [7]: }
+1178 [6]: }
+1179 [6]: 
+1180 [7]: LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp),
+1181 [8]: items(teachers) { tec ->
+1182 [8]: ElevatedCard(
+1183 [8]: modifier = Modifier.fillMaxWidth(),
+1184 [8]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+1185 [9]: ) {
+1186 [10]: Column(modifier = Modifier.padding(14.dp)) {
+1187 [10]: Row(
+1188 [10]: modifier = Modifier.fillMaxWidth(),
+1189 [10]: horizontalArrangement = Arrangement.SpaceBetween,
+1190 [10]: verticalAlignment = Alignment.CenterVertically
+1191 [11]: ) {
+1192 [12]: Row(verticalAlignment = Alignment.CenterVertically) {
+1193 [12]: Icon(imageVector = Icons.Filled.Person, contentDescription =
+1194 [12]: Spacer(modifier = Modifier.width(6.dp))
+1195 [12]: Text(tec.name, fontWeight = FontWeight.Bold, fontSize = 15.s
+1196 [11]: }
+1197 [11]: IconButton(
+1198 [12]: onClick = {
+1199 [12]: selectedTeacherForClassAssign = tec
+1200 [12]: classesTextForAssign = tec.classesAssigned
+1201 [12]: subjectTextForAssign = tec.subject
+1202 [12]: showAssignTeacherDialog = true
+1203 [11]: }
+1204 [11]: ,
+1205 [11]: modifier = Modifier.size(28.dp)
+1206 [12]: ) {
+1207 [12]: Icon(imageVector = Icons.Filled.EditCalendar, contentDescrip
+1208 [11]: }
+1209 [10]: }
+1210 [10]: 
+1211 [10]: Spacer(modifier = Modifier.height(4.dp))
+1212 [10]: Text("Assigned Subject: ${tec.subject}", fontSize = 12.sp, c
+1213 [10]: 
+1214 [10]: Box(
+1215 [10]: modifier = Modifier
+1216 [10]: .padding(top = 6.dp)
+1217 [10]: .clip(RoundedCornerShape(6.dp))
+1218 [10]: .background(MaterialTheme.colorScheme.primaryContainer.copy(
+1219 [10]: .padding(horizontal = 8.dp, vertical = 4.dp)
+1220 [11]: ) {
+1221 [11]: Text(
+1222 [11]: text = "PORTFOLIO: ${tec.classesAssigned.ifBlank { "Unassign
+1223 [11]: fontSize = 10.sp,
+1224 [11]: fontWeight = FontWeight.Bold,
+1225 [11]: color = MaterialTheme.colorScheme.primary
+1226 [11]: )
+1227 [10]: }
+1228 [9]: }
+1229 [8]: }
+1230 [7]: }
+1231 [6]: }
+1232 [5]: }
+1233 [5]: 
+1234 [4]: }
+1235 [5]: 2 -> { // SCHOOL CONFIGURATION CONFIG CODES
+1236 [5]: Column(
+1237 [5]: modifier = Modifier
+1238 [5]: .fillMaxSize()
+1239 [5]: .verticalScroll(rememberScrollState()),
+1240 [5]: verticalArrangement = Arrangement.spacedBy(16.dp)
+1241 [6]: ) {
+1242 [6]: Text("School Setup & Threshold Configuration", style = Mater
+1243 [6]: 
+1245 [6]: ElevatedCard(
+1246 [6]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+1247 [6]: shape = RoundedCornerShape(12.dp)
+1248 [7]: ) {
+1249 [8]: Column(modifier = Modifier.padding(14.dp), verticalArrangeme
+1250 [8]: Text("📢 Broadcast Live Notice Board Announcement", fontWeigh
+1251 [8]: 
+1252 [8]: var noticeTitleInput by remember { mutableStateOf("") }
+1253 [8]: var noticeDescInput by remember { mutableStateOf("") }
+1254 [8]: 
+1255 [8]: OutlinedTextField(
+1256 [8]: value = noticeTitleInput,
+1257 [8]: onValueChange = { noticeTitleInput = it },
+1258 [8]: label = { Text("Notice Title", fontSize = 12.sp) },
+1259 [8]: singleLine = true,
+1260 [8]: modifier = Modifier.fillMaxWidth().testTag("notice_title_inp
+1261 [8]: )
+1262 [8]: OutlinedTextField(
+1263 [8]: value = noticeDescInput,
+1264 [8]: onValueChange = { noticeDescInput = it },
+1265 [8]: label = { Text("Announcement Body Context", fontSize = 12.sp
+1266 [8]: modifier = Modifier.fillMaxWidth().testTag("notice_desc_inpu
+1267 [8]: )
+1268 [8]: 
+1269 [8]: Button(
+1270 [9]: onClick = {
+1271 [10]: if (noticeTitleInput.isBlank() || noticeDescInput.isBlank())
+1272 [10]: Toast.makeText(context, "Title and description details canno
+1273 [10]: } else {
+1274 [10]: val formatter = java.text.SimpleDateFormat("dd MMM yyyy", ja
+1275 [10]: val dateStr = formatter.format(java.util.Date())
+1276 [10]: val newNotice = Notice(
+1277 [10]: noticeId = java.util.UUID.randomUUID().toString(),
+1278 [10]: title = noticeTitleInput,
+1279 [10]: description = noticeDescInput,
+1280 [10]: createdAt = java.util.Date().time,
+1281 [10]: targetClass = "All"
+1282 [10]: )
+1283 [10]: viewModel.addNotice(newNotice)
+1284 [10]: viewModel.logAudit("BROADCAST LIVE NOTICE", noticeTitleInput
+1285 [10]: Toast.makeText(context, "Notice live broadcast active!", Toa
+1286 [10]: noticeTitleInput = ""
+1287 [10]: noticeDescInput = ""
+1288 [9]: }
+1289 [8]: }
+1290 [8]: ,
+1291 [8]: colors = ButtonDefaults.buttonColors(containerColor = Materi
+1292 [8]: modifier = Modifier.fillMaxWidth().testTag("notice_broadcast
+1293 [9]: ) {
+1294 [9]: Text("📢 Broadcast Absolute Notice", fontWeight = FontWeight.
+1295 [8]: }
+1296 [7]: }
+1297 [6]: }
+1298 [6]: 
+1299 [6]: OutlinedTextField(
+1300 [6]: value = schoolName,
+1301 [6]: onValueChange = { schoolName = it },
+1302 [6]: label = { Text("School Facility Title") },
+1303 [6]: singleLine = true,
+1304 [6]: modifier = Modifier.fillMaxWidth()
+1305 [6]: )
+1306 [6]: 
+1307 [6]: OutlinedTextField(
+1308 [6]: value = clockInThreshold,
+1309 [6]: onValueChange = { clockInThreshold = it },
+1310 [6]: label = { Text("Teacher Morning Punch Clock-In Threshold (No
+1311 [6]: singleLine = true,
+1312 [6]: modifier = Modifier.fillMaxWidth()
+1313 [6]: )
+1314 [6]: ElevatedCard(
+1315 [6]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+1316 [6]: modifier = Modifier.fillMaxWidth()
+1317 [7]: ) {
+1318 [8]: Column(modifier = Modifier.padding(14.dp), verticalArrangeme
+1319 [8]: Text("Manage ERP Default Base Fee Formulas", fontWeight = Fo
+1320 [8]: Text("Set base values computed during traditional ledgers re
+1321 [8]: Spacer(modifier = Modifier.height(4.dp))
+1322 [8]: 
+1323 [9]: Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+1324 [9]: OutlinedTextField(value = baseAdmission, onValueChange = { b
+1325 [9]: OutlinedTextField(value = monthlyTuition, onValueChange = { 
+1326 [8]: }
+1327 [9]: Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+1328 [9]: OutlinedTextField(value = sportsFund, onValueChange = { spor
+1329 [9]: OutlinedTextField(value = examFee, onValueChange = { examFee
+1330 [8]: }
+1331 [8]: Text("Transport Slabs", fontWeight = FontWeight.SemiBold, fo
+1332 [9]: Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+1333 [9]: OutlinedTextField(value = transport0to5, onValueChange = { t
+1334 [9]: OutlinedTextField(value = transport5to10, onValueChange = { 
+1335 [9]: OutlinedTextField(value = transport10to15, onValueChange = {
+1336 [8]: }
+1337 [7]: }
+1338 [6]: }
+1339 [6]: Button(
+1340 [7]: onClick = {
+1341 [7]: val newConfig = com.example.data.model.FeeConfig(
+1342 [7]: admissionFee = baseAdmission.toDoubleOrNull() ?: 0.0,
+1343 [7]: tuitionFee = monthlyTuition.toDoubleOrNull() ?: 0.0,
+1344 [7]: gameFee = sportsFund.toDoubleOrNull() ?: 0.0,
+1345 [7]: examFee = examFee.toDoubleOrNull() ?: 0.0,
+1346 [7]: transportSlab1 = transport0to5.toDoubleOrNull() ?: 0.0,
+1347 [7]: transportSlab2 = transport5to10.toDoubleOrNull() ?: 0.0,
+1348 [7]: transportSlab3 = transport10to15.toDoubleOrNull() ?: 0.0
+1349 [7]: )
+1350 [7]: viewModel.saveFeeConfig(newConfig)
+1351 [7]: viewModel.logAudit(
+1352 [7]: "Adjusted Facility Wide Setup Settings",
+1353 [7]: "SchoolName: S. D Public School",
+1354 [7]: "SchoolName: $schoolName, clockInThreshold: $clockInThreshol
+1355 [7]: )
+1356 [7]: Toast.makeText(context, "School Wide Parameters Saved Succes
+1357 [6]: }
+1358 [6]: ,
+1359 [6]: modifier = Modifier
+1360 [6]: .fillMaxWidth()
+1361 [6]: .height(48.dp)
+1362 [7]: ) {
+1363 [7]: Text("Save Facility Setup Configuration", fontWeight = FontW
+1364 [6]: }
+1365 [6]: 
+1366 [6]: 
+1367 [5]: }
+1368 [6]: 3 -> { // COMPREHENSIVE SECURITY AUDITS LOG
+1369 [7]: Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+1370 [7]: Text("Security Auditing Intelligence Timeline", style = Mate
+1371 [7]: Text("View detailed cryptographic activity logs. Restricted 
+1372 [7]: 
+1374 [7]: Row(
+1375 [7]: modifier = Modifier.fillMaxWidth(),
+1376 [7]: horizontalArrangement = Arrangement.spacedBy(8.dp)
+1377 [8]: ) {
+1378 [8]: Column(
+1379 [8]: modifier = Modifier
+1380 [8]: .weight(1f)
+1381 [8]: .clip(RoundedCornerShape(12.dp))
+1382 [8]: .background(MaterialTheme.colorScheme.primaryContainer.copy(
+1383 [8]: .padding(8.dp),
+1384 [8]: horizontalAlignment = Alignment.CenterHorizontally
+1385 [9]: ) {
+1386 [9]: Icon(Icons.Filled.Group, contentDescription = null, tint = M
+1387 [9]: Text("Accounts", fontSize = 10.sp, color = MaterialTheme.col
+1388 [9]: Text("${users.size}", fontWeight = FontWeight.ExtraBold, fon
+1389 [8]: }
+1390 [8]: Column(
+1391 [8]: modifier = Modifier
+1392 [8]: .weight(1f)
+1393 [8]: .clip(RoundedCornerShape(12.dp))
+1394 [8]: .background(MaterialTheme.colorScheme.secondaryContainer.cop
+1395 [8]: .padding(8.dp),
+1396 [8]: horizontalAlignment = Alignment.CenterHorizontally
+1397 [9]: ) {
+1398 [9]: Icon(Icons.Filled.NotificationsActive, contentDescription = 
+1399 [9]: Text("Notices", fontSize = 10.sp, color = MaterialTheme.colo
+1400 [9]: Text("${notices.size}", fontWeight = FontWeight.ExtraBold, f
+1401 [8]: }
+1402 [8]: Column(
+1403 [8]: modifier = Modifier
+1404 [8]: .weight(1f)
+1405 [8]: .clip(RoundedCornerShape(12.dp))
+1406 [8]: .background(MaterialTheme.colorScheme.tertiaryContainer.copy
+1407 [8]: .padding(8.dp),
+1408 [8]: horizontalAlignment = Alignment.CenterHorizontally
+1409 [9]: ) {
+1410 [9]: Icon(Icons.Filled.Fingerprint, contentDescription = null, ti
+1411 [9]: Text("Audited", fontSize = 10.sp, color = MaterialTheme.colo
+1412 [9]: Text("${auditLogs.size}", fontWeight = FontWeight.ExtraBold,
+1413 [8]: }
+1414 [7]: }
+1415 [7]: 
+1416 [8]: if (auditLogs.isEmpty()) {
+1417 [9]: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Al
+1418 [9]: Text("No recent log registry files available.", fontStyle = 
+1419 [8]: }
+1420 [8]: } else {
+1421 [9]: LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp),
+1422 [10]: items(auditLogs) { log ->
+1423 [10]: ElevatedCard(
+1424 [10]: modifier = Modifier.fillMaxWidth(),
+1425 [10]: colors = CardDefaults.elevatedCardColors(containerColor = Ma
+1426 [11]: ) {
+1427 [12]: Column(modifier = Modifier.padding(12.dp)) {
+1428 [12]: Row(
+1429 [12]: modifier = Modifier.fillMaxWidth(),
+1430 [12]: horizontalArrangement = Arrangement.SpaceBetween,
+1431 [12]: verticalAlignment = Alignment.CenterVertically
+1432 [13]: ) {
+1433 [13]: Text(log.userName, fontWeight = FontWeight.Bold, fontSize = 
+1434 [13]: Text(
+1435 [13]: text = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefaul
+1436 [13]: fontSize = 10.sp,
+1437 [13]: color = Color.Gray
+1438 [13]: )
+1439 [12]: }
+1440 [12]: Text("Staff ID: ${log.userId}", fontSize = 11.sp, color = Co
+1441 [12]: Spacer(modifier = Modifier.height(4.dp))
+1442 [12]: Text("Action: ${log.action}", fontWeight = FontWeight.ExtraB
+1443 [12]: 
+1444 [12]: Spacer(modifier = Modifier.height(6.dp))
+1445 [13]: Column {
+1446 [13]: Text("Old Value: ${log.oldValue}", fontSize = 10.sp, color =
+1447 [13]: Text("New Value: ${log.newValue}", fontSize = 10.sp, color =
+1448 [12]: }
+1449 [11]: }
+1450 [10]: }
+1451 [9]: }
+1452 [8]: }
+1453 [7]: }
+1454 [6]: }
+1455 [6]: 
+1456 [6]: 
+1457 [6]: 
+1458 [6]: 
+1459 [7]: if (showAssignTeacherDialog && selectedTeacherForClassAssign
+1460 [7]: val teacherObj = selectedTeacherForClassAssign!!
+1461 [7]: AlertDialog(
+1462 [7]: onDismissRequest = { showAssignTeacherDialog = false },
+1463 [7]: title = { Text("Configure Teacher Portfolio", fontWeight = F
+1464 [8]: text = {
+1465 [9]: Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+1466 [9]: Text("Reassign subjects and classes portfolio for Mrs/Mr: ${
+1467 [9]: 
+1468 [9]: OutlinedTextField(
+1469 [9]: value = subjectTextForAssign,
+1470 [9]: onValueChange = { subjectTextForAssign = it },
+1471 [9]: label = { Text("Instructing Subjects") },
+1472 [9]: modifier = Modifier.fillMaxWidth()
+1473 [9]: )
+1474 [9]: 
+1475 [9]: OutlinedTextField(
+1476 [9]: value = classesTextForAssign,
+1477 [9]: onValueChange = { classesTextForAssign = it },
+1478 [9]: label = { Text("Classes Portfolio (e.g. Class X - Sec A)") }
+1479 [9]: modifier = Modifier.fillMaxWidth()
+1480 [9]: )
+1481 [8]: }
+1482 [7]: },
+1483 [8]: confirmButton = {
+1484 [8]: Button(
+1485 [9]: onClick = {
+1486 [9]: val updated = teacherObj.copy(
+1487 [9]: subject = subjectTextForAssign.trim(),
+1488 [9]: classesAssigned = classesTextForAssign.trim()
+1489 [9]: )
+1490 [9]: viewModel.addOrUpdateTeacher(updated)
+1491 [9]: viewModel.logAudit(
+1492 [9]: "Updated Teacher Portfolio",
+1493 [9]: "Subject: ${teacherObj.subject}, Classes: ${teacherObj.class
+1494 [9]: "Subject: ${updated.subject}, Classes: ${updated.classesAssi
+1495 [9]: )
+1496 [9]: showAssignTeacherDialog = false
+1497 [9]: Toast.makeText(context, "Teacher Portfolio configured!", Toa
+1498 [8]: }
+1499 [9]: ) {
+1500 [9]: Text("Save Portfolio")
+1501 [8]: }
+1502 [7]: },
+1503 [8]: dismissButton = {
+1504 [8]: TextButton(onClick = { showAssignTeacherDialog = false }) { 
+1505 [7]: }
+1506 [7]: )
+1507 [6]: }
+1508 [6]: 
+1509 [6]: 

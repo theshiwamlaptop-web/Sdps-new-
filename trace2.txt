@@ -1,0 +1,168 @@
+Line 978: Balance=1 - 0 -> { // SECURITY ROLES SECUR
+Line 979: Balance=2 - Column(verticalArrangement = A
+Line 980: Balance=3 - Row(modifier = Modifier.fillMa
+Line 981: Balance=3 - Text("Portal Access Directory"
+Line 982: Balance=3 - Text("Count: ${users.size}", f
+Line 983: Balance=2 - }
+Line 984: Balance=2 - 
+Line 985: Balance=3 - LazyColumn(verticalArrangement
+Line 986: Balance=4 - items(users) { usr ->
+Line 987: Balance=4 - val isSelf = usr.userId == pri
+Line 988: Balance=4 - ElevatedCard(
+Line 989: Balance=4 - modifier = Modifier.fillMaxWid
+Line 990: Balance=4 - colors = CardDefaults.elevated
+Line 991: Balance=5 - ) {
+Line 992: Balance=5 - Row(
+Line 993: Balance=5 - modifier = Modifier.padding(12
+Line 994: Balance=5 - verticalAlignment = Alignment.
+Line 995: Balance=5 - horizontalArrangement = Arrang
+Line 996: Balance=6 - ) {
+Line 997: Balance=7 - Column(modifier = Modifier.wei
+Line 998: Balance=8 - Row(verticalAlignment = Alignm
+Line 999: Balance=8 - Text(usr.name.ifBlank { usr.em
+Line 1000: Balance=9 - if (isSelf) {
+Line 1001: Balance=9 - Spacer(modifier = Modifier.wid
+Line 1002: Balance=10 - Box(modifier = Modifier.backgr
+Line 1003: Balance=10 - Text("SELF", fontSize = 8.sp, 
+Line 1004: Balance=9 - }
+Line 1005: Balance=8 - }
+Line 1006: Balance=7 - }
+Line 1007: Balance=7 - Text("ID Code: ${usr.userId} |
+Line 1008: Balance=7 - Text("Auth Level: ${usr.role} 
+Line 1009: Balance=6 - }
+Line 1010: Balance=6 - 
+Line 1011: Balance=7 - Row(horizontalArrangement = Ar
+Line 1012: Balance=7 - // Quick Access Reset Key
+Line 1013: Balance=7 - IconButton(
+Line 1014: Balance=8 - onClick = {
+Line 1015: Balance=8 - viewModel.changePassword(
+Line 1016: Balance=8 - usr.userId,
+Line 1017: Balance=8 - "temp123",
+Line 1018: Balance=9 - onSuccess = {
+Line 1019: Balance=9 - viewModel.logAudit(
+Line 1020: Balance=9 - "Reset Passcode credentials fo
+Line 1021: Balance=9 - usr.passwordHash,
+Line 1022: Balance=9 - "temp123"
+Line 1023: Balance=9 - )
+Line 1024: Balance=9 - Toast.makeText(context, "Passw
+Line 1025: Balance=8 - }
+Line 1026: Balance=8 - ,
+Line 1027: Balance=9 - onFailure = {
+Line 1028: Balance=9 - Toast.makeText(context, "Canno
+Line 1029: Balance=8 - }
+Line 1030: Balance=8 - )
+Line 1031: Balance=7 - }
+Line 1032: Balance=7 - ,
+Line 1033: Balance=7 - modifier = Modifier.size(28.dp
+Line 1034: Balance=8 - ) {
+Line 1035: Balance=8 - Icon(imageVector = Icons.Fille
+Line 1036: Balance=7 - }
+Line 1037: Balance=7 - 
+Line 1038: Balance=7 - // Access promotion dropdown
+Line 1039: Balance=8 - if (!isSelf) {
+Line 1040: Balance=8 - val rolesList = listOf("HEAD_A
+Line 1041: Balance=8 - IconButton(
+Line 1042: Balance=9 - onClick = {
+Line 1043: Balance=9 - val currentIndex = rolesList.i
+Line 1044: Balance=9 - val nextIndex = (currentIndex 
+Line 1045: Balance=9 - val nextRole = rolesList[nextI
+Line 1046: Balance=10 - val updatedRoleCode = when (ne
+Line 1047: Balance=10 - "HEAD_ADMIN" -> "HA-99"
+Line 1048: Balance=10 - "ADMIN" -> "AD-55"
+Line 1049: Balance=10 - "TEACHER" -> "TC-12"
+Line 1050: Balance=10 - else -> "ST-01"
+Line 1051: Balance=9 - }
+Line 1052: Balance=9 - val promotedUser = usr.copy(ro
+Line 1053: Balance=9 - viewModel.addUser(promotedUser
+Line 1054: Balance=9 - viewModel.logAudit(
+Line 1055: Balance=9 - "Modified User Access Level",
+Line 1056: Balance=9 - "Role: ${usr.role}, Code: ${us
+Line 1057: Balance=9 - "Role: $nextRole, Code: $updat
+Line 1058: Balance=9 - )
+Line 1059: Balance=9 - Toast.makeText(context, "Role 
+Line 1060: Balance=8 - }
+Line 1061: Balance=8 - ,
+Line 1062: Balance=8 - modifier = Modifier.size(28.dp
+Line 1063: Balance=9 - ) {
+Line 1064: Balance=9 - Icon(imageVector = Icons.Fille
+Line 1065: Balance=8 - }
+Line 1066: Balance=7 - }
+Line 1067: Balance=6 - }
+Line 1068: Balance=5 - }
+Line 1069: Balance=4 - }
+Line 1070: Balance=3 - }
+Line 1071: Balance=2 - }
+Line 1072: Balance=2 - 
+Line 1073: Balance=2 - // Locked Ownership Transfer S
+Line 1074: Balance=2 - ElevatedCard(
+Line 1075: Balance=2 - colors = CardDefaults.elevated
+Line 1076: Balance=2 - modifier = Modifier.fillMaxWid
+Line 1077: Balance=3 - ) {
+Line 1078: Balance=4 - Column(modifier = Modifier.pad
+Line 1079: Balance=4 - Text("🔒 Enterprise Ownership T
+Line 1080: Balance=4 - Text("Instantly demote your pr
+Line 1081: Balance=4 - 
+Line 1082: Balance=4 - var showTransferDialog by reme
+Line 1083: Balance=4 - var targetUserForTransfer by r
+Line 1084: Balance=4 - 
+Line 1085: Balance=4 - var dropdownExpanded by rememb
+Line 1086: Balance=5 - Box {
+Line 1087: Balance=6 - OutlinedButton(onClick = { dro
+Line 1088: Balance=6 - Text(targetUserForTransfer?.le
+Line 1089: Balance=5 - }
+Line 1090: Balance=6 - DropdownMenu(expanded = dropdo
+Line 1091: Balance=7 - users.filter { it.userId != pr
+Line 1092: Balance=7 - DropdownMenuItem(
+Line 1093: Balance=7 - text = { Text("${otherUsr.name
+Line 1094: Balance=8 - onClick = {
+Line 1095: Balance=8 - targetUserForTransfer = otherU
+Line 1096: Balance=8 - dropdownExpanded = false
+Line 1097: Balance=7 - }
+Line 1098: Balance=7 - )
+Line 1099: Balance=6 - }
+Line 1100: Balance=5 - }
+Line 1101: Balance=4 - }
+Line 1102: Balance=4 - 
+Line 1103: Balance=4 - Button(
+Line 1104: Balance=4 - onClick = { showTransferDialog
+Line 1105: Balance=4 - colors = ButtonDefaults.button
+Line 1106: Balance=4 - modifier = Modifier.fillMaxWid
+Line 1107: Balance=4 - enabled = targetUserForTransfe
+Line 1108: Balance=5 - ) {
+Line 1109: Balance=5 - Text("Transfer Principal Owner
+Line 1110: Balance=4 - }
+Line 1111: Balance=4 - 
+Line 1112: Balance=5 - if (showTransferDialog && targ
+Line 1113: Balance=5 - AlertDialog(
+Line 1114: Balance=5 - onDismissRequest = { showTrans
+Line 1115: Balance=5 - title = { Text("WARN: CRYPTOGR
+Line 1116: Balance=5 - text = { Text("Are you absolut
+Line 1117: Balance=6 - confirmButton = {
+Line 1118: Balance=6 - Button(
+Line 1119: Balance=7 - onClick = {
+Line 1120: Balance=7 - showTransferDialog = false
+Line 1121: Balance=7 - val oldPrincipal = principal.c
+Line 1122: Balance=7 - val newPrincipal = targetUserF
+Line 1123: Balance=7 - viewModel.addUser(oldPrincipal
+Line 1124: Balance=7 - viewModel.addUser(newPrincipal
+Line 1125: Balance=7 - viewModel.logAudit("OWNERSHIP 
+Line 1126: Balance=7 - Toast.makeText(context, "Owner
+Line 1127: Balance=7 - targetUserForTransfer = null
+Line 1128: Balance=6 - }
+Line 1129: Balance=6 - ,
+Line 1130: Balance=6 - colors = ButtonDefaults.button
+Line 1131: Balance=6 - modifier = Modifier.testTag("c
+Line 1132: Balance=7 - ) {
+Line 1133: Balance=7 - Text("YES, CONFIRM TRANSFER")
+Line 1134: Balance=6 - }
+Line 1135: Balance=5 - }
+Line 1136: Balance=5 - ,
+Line 1137: Balance=6 - dismissButton = {
+Line 1138: Balance=6 - TextButton(onClick = { showTra
+Line 1139: Balance=5 - }
+Line 1140: Balance=5 - )
+Line 1141: Balance=4 - }
+Line 1142: Balance=3 - }
+Line 1143: Balance=2 - }
+Line 1144: Balance=1 - }
+Line 1145: Balance=1 - 
