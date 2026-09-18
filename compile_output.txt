@@ -1,0 +1,76 @@
+Reusing configuration cache.
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :app:kspDebugKotlin FROM-CACHE
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3130:7 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3132:9 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3135:43 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3431:35 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3432:37 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3455:37 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:3456:37 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4034:40 Syntax error: Expecting an expression.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4059:27 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4061:36 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4104:9 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4108:21 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4108:37 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4123:13 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4123:32 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4129:1 Syntax error: Expecting a top level declaration.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4130:1 Syntax error: Expecting a top level declaration.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4304:11 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4306:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4308:39 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4308:89 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4379:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4391:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4432:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4438:52 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4439:56 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4440:61 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4453:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4455:39 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4460:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4472:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4505:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4507:39 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4512:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4523:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4570:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:4573:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:6779:1 Syntax error: Expecting a top level declaration.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:6780:1 Syntax error: Expecting a top level declaration.
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:6913:7 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:6920:9 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:6923:43 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:7053:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:7062:50 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:7063:63 @Composable invocations can only happen from the context of a @Composable function
+e: file:///app/applet/app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt:7064:13 @Composable invocations can only happen from the context of a @Composable function
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 23s
+9 actionable tasks: 1 executed, 3 from cache, 5 up-to-date
+Configuration cache entry reused.

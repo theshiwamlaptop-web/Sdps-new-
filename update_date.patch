@@ -1,0 +1,7 @@
+--- app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt
++++ app/src/main/java/com/example/ui/screens/SchoolAppScreens.kt
+@@ -4012,3 +4012,3 @@
+     }
+-    var selectedDate by remember { mutableStateOf("2026-05-22") }
++    var selectedDate by remember { mutableStateOf(java.time.LocalDate.now().toString()) }
+     var attendanceSearchQuery by remember { mutableStateOf("") }

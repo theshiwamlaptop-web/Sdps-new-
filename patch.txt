@@ -1,0 +1,18 @@
+--- app/src/main/java/com/example/data/repository/SchoolRepository.kt
++++ app/src/main/java/com/example/data/repository/SchoolRepository.kt
+@@ -1,3 +1,3 @@
+     override suspend fun deleteStudent(studentId: String): Result<Unit> {
+         return try {
+-            db.studentDao().deleteStudentById(studentId)
+-            firestore?.collection("students")?.document(studentId)?.delete()
++            val student = db.studentDao().getStudentById(studentId)
++            if (student != null) {
++                val deletedStudent = student.copy(isDeleted = true, status = "DELETED")
++                db.studentDao().updateStudent(deletedStudent)
++                firestore?.collection("students")?.document(studentId)?.set(deletedStudent)
++            }
+             Result.success(Unit)
+         } catch (e: Exception) {
+             Result.failure(e)
+         }
+     }
